@@ -1,0 +1,62 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:MarkdownViewer.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="using:MarkdownViewer.Views"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="700"
+        x:Class="MarkdownViewer.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="{Binding WindowTitle}"
+        Width="1200" Height="700">
+
+    <Design.DataContext>
+        <vm:MainViewModel/>
+    </Design.DataContext>
+
+    <DockPanel>
+        <!-- Menu Bar -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_New" Command="{Binding NewFileCommand}" InputGesture="Ctrl+N"/>
+                <MenuItem Header="_Open..." Command="{Binding OpenFileCommand}" InputGesture="Ctrl+O"/>
+                <MenuItem Header="_Save" Command="{Binding SaveFileCommand}" InputGesture="Ctrl+S"/>
+                <MenuItem Header="Save _As..." Command="{Binding SaveFileAsCommand}" InputGesture="Ctrl+Shift+S"/>
+                <Separator/>
+                <MenuItem Header="_Export HTML..." Command="{Binding ExportHtmlCommand}"/>
+                <Separator/>
+                <MenuItem Header="E_xit" Command="{Binding ExitCommand}" InputGesture="Alt+F4"/>
+            </MenuItem>
+            <MenuItem Header="_Edit">
+                <MenuItem Header="_Bold" Command="{Binding EditorViewModel.InsertBoldCommand}" InputGesture="Ctrl+B"/>
+                <MenuItem Header="_Italic" Command="{Binding EditorViewModel.InsertItalicCommand}" InputGesture="Ctrl+I"/>
+                <MenuItem Header="_Link" Command="{Binding EditorViewModel.InsertLinkCommand}" InputGesture="Ctrl+K"/>
+                <MenuItem Header="I_mage" Command="{Binding EditorViewModel.InsertImageCommand}" InputGesture="Ctrl+Shift+I"/>
+                <MenuItem Header="_Code Block" Command="{Binding EditorViewModel.InsertCodeBlockCommand}" InputGesture="Ctrl+Shift+C"/>
+                <MenuItem Header="_Table" Command="{Binding EditorViewModel.InsertTableCommand}" InputGesture="Ctrl+T"/>
+            </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="Toggle _Theme" Command="{Binding ToggleThemeCommand}" InputGesture="Ctrl+Shift+T"/>
+                <MenuItem Header="Zoom _In" Command="{Binding PreviewViewModel.ZoomInCommand}" InputGesture="Ctrl+OemPlus"/>
+                <MenuItem Header="Zoom _Out" Command="{Binding PreviewViewModel.ZoomOutCommand}" InputGesture="Ctrl+OemMinus"/>
+                <MenuItem Header="_Reset Zoom" Command="{Binding PreviewViewModel.ResetZoomCommand}" InputGesture="Ctrl+D0"/>
+            </MenuItem>
+        </Menu>
+
+        <!-- Status Bar -->
+        <Border DockPanel.Dock="Bottom" Background="#F0F0F0" Padding="8,4" Name="StatusBar">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center" Name="StatusText"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="15">
+                    <TextBlock Text="{Binding EditorViewModel.State.WordCount, StringFormat='Words: {0}'}" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding EditorViewModel.State.CharCount, StringFormat='Characters: {0}'}" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding IsDarkTheme, Converter={x:Static views:MainWindow.ThemeConverter}}" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Content Area -->
+        <views:EditorPreviewView DataContext="{Binding}"/>
+    </DockPanel>
+</Window>

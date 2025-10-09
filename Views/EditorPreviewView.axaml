@@ -1,0 +1,51 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:MarkdownViewer.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="650"
+             x:Class="MarkdownViewer.Views.EditorPreviewView"
+             x:DataType="vm:MainViewModel">
+
+    <Grid ColumnDefinitions="*,5,*">
+        <!-- Editor Panel -->
+        <Border Grid.Column="0" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0" Name="EditorBorder" Background="#FFFFFF">
+            <TextBox
+                Name="MarkdownEditor"
+                FontFamily="Consolas,Courier New,monospace"
+                FontSize="14"
+                AcceptsReturn="True"
+                AcceptsTab="True"
+                TextWrapping="Wrap"
+                Background="#FFFFFF"
+                Foreground="#000000"
+                BorderThickness="0"
+                VerticalAlignment="Stretch"
+                HorizontalAlignment="Stretch"
+                VerticalContentAlignment="Top"
+                Padding="10"
+                Text="# Start Typing Your Markdown Here!&#x0A;&#x0A;Try:&#x0A;- **Bold text**&#x0A;- *Italic text*&#x0A;- Lists and more&#x0A;&#x0A;Press Ctrl+Shift+T to toggle dark mode"/>
+        </Border>
+
+        <!-- Splitter -->
+        <GridSplitter Grid.Column="1"
+                      Background="#E0E0E0"
+                      ResizeDirection="Columns"
+                      Name="Splitter"/>
+
+        <!-- Preview Panel -->
+        <Border Grid.Column="2" Background="#FFFFFF" Name="PreviewBorder">
+            <ScrollViewer Name="PreviewScroller"
+                         VerticalScrollBarVisibility="Auto"
+                         HorizontalScrollBarVisibility="Auto"
+                         Padding="20">
+                <StackPanel Name="PreviewContent" Spacing="8">
+                    <TextBlock Text="Start typing markdown in the editor to see the preview..."
+                              Foreground="#999999"
+                              FontStyle="Italic"
+                              TextWrapping="Wrap"/>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</UserControl>

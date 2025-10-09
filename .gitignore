@@ -1,0 +1,46 @@
+# Build results
+bin/
+obj/
+out/
+
+# Avalonia designer files
+*.axaml.cs.designer
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio Code
+.vscode/
+
+# Rider
+.idea/
+
+#
+.claude/
+
+# NuGet packages
+*.nupkg
+*.snupkg
+packages/
+.nuget/
+*.nuspec
+
+# Dotnet artifacts
+*.dll
+*.exe
+*.pdb
+*.cache
+*.log
+
+# Others
+*.vs/
+*.DS_Store
+*.swp
+*.bak
+*.tmp
+
+# Avalonia resources
+Resources/Generated/
