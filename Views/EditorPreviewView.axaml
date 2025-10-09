@@ -8,11 +8,7 @@
              x:Class="MarkdownViewer.Views.EditorPreviewView"
              x:DataType="vm:DocumentViewModel">
 
-    <Grid RowDefinitions="Auto,*" ColumnDefinitions="*,5,*">
-        <!-- Toolbar -->
-        <StackPanel Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="8" Margin="8,8,8,4">
-            <ToggleSwitch IsChecked="{Binding IsReadMode}" Content="Read mode"/>
-        </StackPanel>
+    <Grid RowDefinitions="0,*" ColumnDefinitions="*,5,*">
         <!-- Editor Panel -->
     <Border Grid.Row="1" Grid.Column="0" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0" Name="EditorBorder" Background="#FFFFFF" IsVisible="{Binding IsReadMode, Converter={x:Static conv:BoolNotConverter.Instance}}">
             <TextBox

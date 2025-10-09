@@ -41,6 +41,8 @@
                 <MenuItem Header="Zoom _In" Command="{Binding ActiveDocument.PreviewViewModel.ZoomInCommand}" InputGesture="Ctrl+OemPlus"/>
                 <MenuItem Header="Zoom _Out" Command="{Binding ActiveDocument.PreviewViewModel.ZoomOutCommand}" InputGesture="Ctrl+OemMinus"/>
                 <MenuItem Header="_Reset Zoom" Command="{Binding ActiveDocument.PreviewViewModel.ResetZoomCommand}" InputGesture="Ctrl+D0"/>
+                <Separator/>
+                <MenuItem Header="_Toggle Read Mode" Command="{Binding ToggleReadModeCommand}" InputGesture="F6"/>
             </MenuItem>
         </Menu>
 

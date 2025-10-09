@@ -242,4 +242,11 @@ public partial class MainViewModel : ViewModelBase
         IsDirty = ActiveDocument.IsDirty;
         UpdateWindowTitle();
     }
+
+    [RelayCommand]
+    private void ToggleReadMode()
+    {
+        if (ActiveDocument == null) return;
+        ActiveDocument.IsReadMode = !ActiveDocument.IsReadMode;
+    }
 }
