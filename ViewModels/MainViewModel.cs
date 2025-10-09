@@ -4,6 +4,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MarkdownViewer.Models;
 using MarkdownViewer.Services;
+using Avalonia;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MarkdownViewer.ViewModels;
 
@@ -16,6 +18,9 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private bool _isDirty = false;
     [ObservableProperty] private bool _isDarkTheme = false;
     [ObservableProperty] private string _windowTitle = "Markdown Viewer";
+
+    [ObservableProperty] private System.Collections.ObjectModel.ObservableCollection<DocumentViewModel> _documents = new();
+    [ObservableProperty] private DocumentViewModel? _activeDocument;
 
     private readonly IFileService _fileService;
     private readonly IExportService _exportService;
@@ -32,15 +37,7 @@ public partial class MainViewModel : ViewModelBase
         _previewViewModel = previewViewModel;
         _currentDocument = new MarkdownDocument();
 
-        // Subscribe to editor text changes
-        _editorViewModel.TextChangedDebounced += async (s, text) =>
-        {
-            await _previewViewModel.UpdatePreviewAsync(text);
-            IsDirty = CurrentDocument.Content != text;
-            UpdateWindowTitle();
-        };
-
-        // Initialize with empty document
+        // Initialize with one tab
         _ = NewFileAsync();
     }
 
@@ -52,11 +49,13 @@ public partial class MainViewModel : ViewModelBase
             // TODO: Show confirmation dialog
         }
 
-        CurrentDocument = await _fileService.CreateNewDocumentAsync();
-        EditorViewModel.Text = string.Empty;
-        IsDirty = false;
+        var docVm = CreateDocumentViewModel();
+        var doc = await _fileService.CreateNewDocumentAsync();
+        docVm.ApplyDocument(doc);
+        Documents.Add(docVm);
+        ActiveDocument = docVm;
+        SyncTopLevelWithActive();
         StatusText = "New document created";
-        UpdateWindowTitle();
     }
 
     [RelayCommand]
@@ -67,17 +66,20 @@ public partial class MainViewModel : ViewModelBase
             // TODO: Show confirmation dialog
         }
 
-        var result = await ShowOpenFileDialogAsync?.Invoke()!;
-        if (result == null) return;
+    var openDlg = ShowOpenFileDialogAsync;
+    if (openDlg is null) return;
+    var result = await openDlg();
+    if (string.IsNullOrEmpty(result)) return;
 
         var document = await _fileService.OpenFileAsync(result);
         if (document != null)
         {
-            CurrentDocument = document;
-            EditorViewModel.Text = document.Content;
-            IsDirty = false;
+            var docVm = CreateDocumentViewModel();
+            docVm.ApplyDocument(document);
+            Documents.Add(docVm);
+            ActiveDocument = docVm;
+            SyncTopLevelWithActive();
             StatusText = $"Opened: {document.Title}";
-            UpdateWindowTitle();
         }
         else
         {
@@ -88,21 +90,21 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     private async Task SaveFileAsync()
     {
-        if (CurrentDocument.IsNewDocument)
+        if (ActiveDocument?.CurrentDocument.IsNewDocument == true)
         {
             await SaveFileAsAsync();
             return;
         }
 
-        var updatedDoc = CurrentDocument with { Content = EditorViewModel.Text };
+        if (ActiveDocument is null) return;
+        var updatedDoc = ActiveDocument.CurrentDocument with { Content = ActiveDocument.EditorViewModel.Text };
         var success = await _fileService.SaveFileAsync(updatedDoc);
 
         if (success)
         {
-            CurrentDocument = updatedDoc with { IsDirty = false };
-            IsDirty = false;
-            StatusText = $"Saved: {CurrentDocument.Title}";
-            UpdateWindowTitle();
+            ActiveDocument.ApplyDocument(updatedDoc with { IsDirty = false });
+            SyncTopLevelWithActive();
+            StatusText = $"Saved: {ActiveDocument.Title}";
         }
         else
         {
@@ -113,12 +115,15 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     private async Task SaveFileAsAsync()
     {
-        var result = await ShowSaveFileDialogAsync?.Invoke(null);
-        if (result == null) return;
+    var saveDlg = ShowSaveFileDialogAsync;
+    if (saveDlg is null) return;
+        var result = await saveDlg(null);
+    if (string.IsNullOrEmpty(result)) return;
 
-        var updatedDoc = CurrentDocument with
+        if (ActiveDocument is null) return;
+        var updatedDoc = ActiveDocument.CurrentDocument with
         {
-            Content = EditorViewModel.Text,
+            Content = ActiveDocument.EditorViewModel.Text,
             FilePath = result,
             Title = System.IO.Path.GetFileNameWithoutExtension(result)
         };
@@ -127,10 +132,9 @@ public partial class MainViewModel : ViewModelBase
 
         if (success)
         {
-            CurrentDocument = updatedDoc with { IsDirty = false };
-            IsDirty = false;
-            StatusText = $"Saved as: {CurrentDocument.Title}";
-            UpdateWindowTitle();
+            ActiveDocument.ApplyDocument(updatedDoc with { IsDirty = false });
+            SyncTopLevelWithActive();
+            StatusText = $"Saved as: {ActiveDocument.Title}";
         }
         else
         {
@@ -141,11 +145,14 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     private async Task ExportHtmlAsync()
     {
-        var result = await ShowSaveFileDialogAsync?.Invoke("html")!;
-        if (result == null) return;
+    var saveHtmlDlg = ShowSaveFileDialogAsync;
+    if (saveHtmlDlg is null) return;
+        var result = await saveHtmlDlg("html");
+    if (string.IsNullOrEmpty(result)) return;
 
+        if (ActiveDocument is null) return;
         var success = await _exportService.ExportToHtmlAsync(
-            CurrentDocument with { Content = EditorViewModel.Text },
+            ActiveDocument.CurrentDocument with { Content = ActiveDocument.EditorViewModel.Text },
             result);
 
         StatusText = success ? $"Exported to: {result}" : "Failed to export";
@@ -155,8 +162,10 @@ public partial class MainViewModel : ViewModelBase
     private void ToggleTheme()
     {
         IsDarkTheme = !IsDarkTheme;
-        PreviewViewModel.IsDarkTheme = IsDarkTheme;
-        _ = PreviewViewModel.UpdatePreviewAsync(EditorViewModel.Text);
+        if (ActiveDocument != null)
+        {
+            ActiveDocument.ApplyTheme(IsDarkTheme);
+        }
         StatusText = IsDarkTheme ? "Dark theme enabled" : "Light theme enabled";
     }
 
@@ -172,12 +181,65 @@ public partial class MainViewModel : ViewModelBase
 
     private void UpdateWindowTitle()
     {
-        var dirtyMarker = IsDirty ? "*" : "";
-        var fileName = string.IsNullOrEmpty(CurrentDocument.Title) ? "Untitled" : CurrentDocument.Title;
+        var isDirty = ActiveDocument?.IsDirty == true;
+        var fileName = ActiveDocument?.Title ?? "Untitled";
+        var dirtyMarker = isDirty ? "*" : "";
         WindowTitle = $"{fileName}{dirtyMarker} - Markdown Viewer";
     }
 
     // These methods will be called from the View
     public Func<Task<string?>>? ShowOpenFileDialogAsync { get; set; }
     public Func<string?, Task<string?>>? ShowSaveFileDialogAsync { get; set; }
+
+    // Open a file from a provided path (used for command-line / file association startup)
+    public async Task OpenFileFromPathAsync(string? path)
+    {
+        if (string.IsNullOrEmpty(path)) return;
+
+        if (IsDirty)
+        {
+            // TODO: Show confirmation dialog before discarding unsaved changes
+        }
+
+        var document = await _fileService.OpenFileAsync(path);
+        if (document != null)
+        {
+            var docVm = CreateDocumentViewModel();
+            docVm.ApplyDocument(document);
+            Documents.Add(docVm);
+            ActiveDocument = docVm;
+            SyncTopLevelWithActive();
+            StatusText = $"Opened: {document.Title}";
+        }
+        else
+        {
+            StatusText = "Failed to open file";
+        }
+    }
+
+    private DocumentViewModel CreateDocumentViewModel()
+    {
+        // Resolve via DI to ensure services (e.g., IMarkdownService) are injected
+        var sp = (Application.Current as App)?.Services;
+        if (sp == null)
+        {
+            // Fallback (should not happen): create with bare VMs (limited functionality)
+            var fallback = new DocumentViewModel(new EditorViewModel(), new PreviewViewModel(null!));
+            fallback.ApplyTheme(IsDarkTheme);
+            return fallback;
+        }
+        var docVm = sp.GetRequiredService<DocumentViewModel>();
+        docVm.ApplyTheme(IsDarkTheme);
+        return docVm;
+    }
+
+    private void SyncTopLevelWithActive()
+    {
+        if (ActiveDocument == null) return;
+        CurrentDocument = ActiveDocument.CurrentDocument;
+        EditorViewModel = ActiveDocument.EditorViewModel;
+        PreviewViewModel = ActiveDocument.PreviewViewModel;
+        IsDirty = ActiveDocument.IsDirty;
+        UpdateWindowTitle();
+    }
 }

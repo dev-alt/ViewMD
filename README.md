@@ -192,3 +192,68 @@ Built with:
 - [Markdig](https://github.com/xoofx/markdig)
 - [AvaloniaEdit](https://github.com/AvaloniaUI/AvaloniaEdit)
 - [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet)
+
+## File association (Windows)
+
+To make `.md` files open with this app when double-clicked on Windows, you can register a file association. There are two common ways:
+
+1) During installer/publish: add a file-association entry in your installer (recommended).
+
+2) Per-user registration script: run `scripts/register-md-association.ps1` with the path to your installed exe. This registers entries under HKCU so “Open with” works and lets you set Markdown Viewer as default in Windows Settings.
+
+```powershell
+pwsh -ExecutionPolicy Bypass -File .\scripts\register-md-association.ps1 -ExePath "C:\\Program Files\\MarkdownViewer\\MarkdownViewer.exe" -SetDefault
+```
+
+3) Manual registry merge: a `.reg` file is provided in `docs/associate-md.reg` as an example. Edit the executable path in that file to point to your installed `MarkdownViewer.exe`, then double-click the `.reg` file to merge it into the registry (requires appropriate permissions).
+
+Example usage (for testing):
+
+1. Build and publish the app for Windows (self-contained recommended):
+
+```powershell
+dotnet publish -c Release -r win-x64 --self-contained -o publish\win-x64
+```
+
+2. Edit `docs\associate-md.reg` to point to the published executable path (or copy the EXE into `C:\Program Files\\MarkdownViewer\\`).
+
+3. Double-click the `.reg` file to merge it. After that, double-clicking a `.md` file should start Markdown Viewer and open the file.
+
+4. Alternatively for testing without registry edits, you can run the app with a file path argument:
+
+```powershell
+dotnet run -- "C:\path\to\example.md"
+# or run the published exe directly:
+publish\win-x64\MarkdownViewer.exe "C:\path\to\example.md"
+```
+
+To undo the per-user registration:
+
+```powershell
+pwsh -ExecutionPolicy Bypass -File .\scripts\unregister-md-association.ps1
+```
+
+Security: editing the registry affects your system configuration — only run scripts/merge `.reg` files you trust. Installer-based registration is safer for end users.
+
+## Packaging / Installers
+
+### Inno Setup (EXE installer)
+An Inno Setup script is provided at `installer/inno-setup.iss` which:
+- Copies the published binaries to Program Files
+- Registers `.md` file associations (optional task during install)
+- Adds the app to "Open with"
+
+Steps:
+1. Publish your app to `publish\win-x64`:
+	```powershell
+	dotnet publish -c Release -r win-x64 --self-contained -o publish\win-x64 MarkdownViewer.csproj
+	```
+2. Open `installer\inno-setup.iss` in Inno Setup and build the installer.
+3. Run the generated `MarkdownViewer-Setup.exe`. Choose the file association task if desired.
+
+### MSIX (AppX) package
+An MSIX `AppxManifest.xml` template is under `installer/` with a file type association for `.md` and `.markdown`.
+
+Notes:
+- You’ll need to sign the package and supply required assets (icons) referenced in the manifest.
+- The app runs as a full-trust desktop app; ensure the executable path in the manifest matches your package layout.

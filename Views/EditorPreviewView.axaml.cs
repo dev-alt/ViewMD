@@ -67,7 +67,7 @@ public partial class EditorPreviewView : UserControl
         _renderTimer.Tick += async (s, e) =>
         {
             _renderTimer?.Stop();
-            if (DataContext is MainViewModel vm && _editor != null)
+            if (DataContext is DocumentViewModel vm && _editor != null)
             {
                 var text = _editor.Text ?? string.Empty;
                 await vm.PreviewViewModel.UpdatePreviewAsync(text);
@@ -80,7 +80,7 @@ public partial class EditorPreviewView : UserControl
     {
         base.OnDataContextChanged(e);
 
-        if (DataContext is MainViewModel vm)
+        if (DataContext is DocumentViewModel vm)
         {
             // Wire up editor to view model
             vm.EditorViewModel.TextInsertRequested += OnTextInsertRequested;

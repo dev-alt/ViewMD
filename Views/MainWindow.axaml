@@ -29,18 +29,18 @@
                 <MenuItem Header="E_xit" Command="{Binding ExitCommand}" InputGesture="Alt+F4"/>
             </MenuItem>
             <MenuItem Header="_Edit">
-                <MenuItem Header="_Bold" Command="{Binding EditorViewModel.InsertBoldCommand}" InputGesture="Ctrl+B"/>
-                <MenuItem Header="_Italic" Command="{Binding EditorViewModel.InsertItalicCommand}" InputGesture="Ctrl+I"/>
-                <MenuItem Header="_Link" Command="{Binding EditorViewModel.InsertLinkCommand}" InputGesture="Ctrl+K"/>
-                <MenuItem Header="I_mage" Command="{Binding EditorViewModel.InsertImageCommand}" InputGesture="Ctrl+Shift+I"/>
-                <MenuItem Header="_Code Block" Command="{Binding EditorViewModel.InsertCodeBlockCommand}" InputGesture="Ctrl+Shift+C"/>
-                <MenuItem Header="_Table" Command="{Binding EditorViewModel.InsertTableCommand}" InputGesture="Ctrl+T"/>
+                <MenuItem Header="_Bold" Command="{Binding ActiveDocument.EditorViewModel.InsertBoldCommand}" InputGesture="Ctrl+B"/>
+                <MenuItem Header="_Italic" Command="{Binding ActiveDocument.EditorViewModel.InsertItalicCommand}" InputGesture="Ctrl+I"/>
+                <MenuItem Header="_Link" Command="{Binding ActiveDocument.EditorViewModel.InsertLinkCommand}" InputGesture="Ctrl+K"/>
+                <MenuItem Header="I_mage" Command="{Binding ActiveDocument.EditorViewModel.InsertImageCommand}" InputGesture="Ctrl+Shift+I"/>
+                <MenuItem Header="_Code Block" Command="{Binding ActiveDocument.EditorViewModel.InsertCodeBlockCommand}" InputGesture="Ctrl+Shift+C"/>
+                <MenuItem Header="_Table" Command="{Binding ActiveDocument.EditorViewModel.InsertTableCommand}" InputGesture="Ctrl+T"/>
             </MenuItem>
             <MenuItem Header="_View">
                 <MenuItem Header="Toggle _Theme" Command="{Binding ToggleThemeCommand}" InputGesture="Ctrl+Shift+T"/>
-                <MenuItem Header="Zoom _In" Command="{Binding PreviewViewModel.ZoomInCommand}" InputGesture="Ctrl+OemPlus"/>
-                <MenuItem Header="Zoom _Out" Command="{Binding PreviewViewModel.ZoomOutCommand}" InputGesture="Ctrl+OemMinus"/>
-                <MenuItem Header="_Reset Zoom" Command="{Binding PreviewViewModel.ResetZoomCommand}" InputGesture="Ctrl+D0"/>
+                <MenuItem Header="Zoom _In" Command="{Binding ActiveDocument.PreviewViewModel.ZoomInCommand}" InputGesture="Ctrl+OemPlus"/>
+                <MenuItem Header="Zoom _Out" Command="{Binding ActiveDocument.PreviewViewModel.ZoomOutCommand}" InputGesture="Ctrl+OemMinus"/>
+                <MenuItem Header="_Reset Zoom" Command="{Binding ActiveDocument.PreviewViewModel.ResetZoomCommand}" InputGesture="Ctrl+D0"/>
             </MenuItem>
         </Menu>
 
@@ -49,14 +49,25 @@
             <Grid ColumnDefinitions="*,Auto">
                 <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center" Name="StatusText"/>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="15">
-                    <TextBlock Text="{Binding EditorViewModel.State.WordCount, StringFormat='Words: {0}'}" VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding EditorViewModel.State.CharCount, StringFormat='Characters: {0}'}" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding ActiveDocument.EditorViewModel.State.WordCount, StringFormat='Words: {0}'}" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding ActiveDocument.EditorViewModel.State.CharCount, StringFormat='Characters: {0}'}" VerticalAlignment="Center"/>
                     <TextBlock Text="{Binding IsDarkTheme, Converter={x:Static views:MainWindow.ThemeConverter}}" VerticalAlignment="Center"/>
                 </StackPanel>
             </Grid>
         </Border>
 
-        <!-- Main Content Area -->
-        <views:EditorPreviewView DataContext="{Binding}"/>
+        <!-- Tabs: one Editor/Preview per document -->
+        <TabControl ItemsSource="{Binding Documents}" SelectedItem="{Binding ActiveDocument}">
+            <TabControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:DocumentViewModel">
+                    <TextBlock Text="{Binding Title}"/>
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+            <TabControl.ContentTemplate>
+                <DataTemplate x:DataType="vm:DocumentViewModel">
+                    <views:EditorPreviewView DataContext="{Binding}"/>
+                </DataTemplate>
+            </TabControl.ContentTemplate>
+        </TabControl>
     </DockPanel>
 </Window>

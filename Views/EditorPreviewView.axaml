@@ -5,7 +5,7 @@
              xmlns:vm="using:MarkdownViewer.ViewModels"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="650"
              x:Class="MarkdownViewer.Views.EditorPreviewView"
-             x:DataType="vm:MainViewModel">
+             x:DataType="vm:DocumentViewModel">
 
     <Grid ColumnDefinitions="*,5,*">
         <!-- Editor Panel -->
