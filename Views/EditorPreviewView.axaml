@@ -3,13 +3,18 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:MarkdownViewer.ViewModels"
+             xmlns:conv="using:MarkdownViewer.Converters"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="650"
              x:Class="MarkdownViewer.Views.EditorPreviewView"
              x:DataType="vm:DocumentViewModel">
 
-    <Grid ColumnDefinitions="*,5,*">
+    <Grid RowDefinitions="Auto,*" ColumnDefinitions="*,5,*">
+        <!-- Toolbar -->
+        <StackPanel Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="8" Margin="8,8,8,4">
+            <ToggleSwitch IsChecked="{Binding IsReadMode}" Content="Read mode"/>
+        </StackPanel>
         <!-- Editor Panel -->
-        <Border Grid.Column="0" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0" Name="EditorBorder" Background="#FFFFFF">
+    <Border Grid.Row="1" Grid.Column="0" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0" Name="EditorBorder" Background="#FFFFFF" IsVisible="{Binding IsReadMode, Converter={x:Static conv:BoolNotConverter.Instance}}">
             <TextBox
                 Name="MarkdownEditor"
                 FontFamily="Consolas,Courier New,monospace"
@@ -24,17 +29,18 @@
                 HorizontalAlignment="Stretch"
                 VerticalContentAlignment="Top"
                 Padding="10"
-                Text="# Start Typing Your Markdown Here!&#x0A;&#x0A;Try:&#x0A;- **Bold text**&#x0A;- *Italic text*&#x0A;- Lists and more&#x0A;&#x0A;Press Ctrl+Shift+T to toggle dark mode"/>
+        IsReadOnly="{Binding IsReadMode}"
+        Text="# Start Typing Your Markdown Here!&#x0A;&#x0A;Try:&#x0A;- **Bold text**&#x0A;- *Italic text*&#x0A;- Lists and more&#x0A;&#x0A;Press Ctrl+Shift+T to toggle dark mode"/>
         </Border>
 
         <!-- Splitter -->
-        <GridSplitter Grid.Column="1"
+    <GridSplitter Grid.Row="1" Grid.Column="1"
                       Background="#E0E0E0"
                       ResizeDirection="Columns"
                       Name="Splitter"/>
 
         <!-- Preview Panel -->
-        <Border Grid.Column="2" Background="#FFFFFF" Name="PreviewBorder">
+    <Border Grid.Row="1" Grid.Column="2" Background="#FFFFFF" Name="PreviewBorder">
             <ScrollViewer Name="PreviewScroller"
                          VerticalScrollBarVisibility="Auto"
                          HorizontalScrollBarVisibility="Auto"

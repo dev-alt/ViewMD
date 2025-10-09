@@ -12,6 +12,7 @@ public partial class DocumentViewModel : ViewModelBase
     [ObservableProperty] private PreviewViewModel _previewViewModel;
     [ObservableProperty] private bool _isDirty;
     [ObservableProperty] private bool _isDarkTheme;
+    [ObservableProperty] private bool _isReadMode = true;
     [ObservableProperty] private string _title = "Untitled";
 
     public DocumentViewModel(EditorViewModel editorViewModel, PreviewViewModel previewViewModel)
