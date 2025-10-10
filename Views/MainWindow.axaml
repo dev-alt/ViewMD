@@ -7,6 +7,7 @@
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="700"
         x:Class="MarkdownViewer.Views.MainWindow"
         x:DataType="vm:MainViewModel"
+        d:DataContext="{d:DesignInstance Type=vm:MainViewModel, IsDesignTimeCreatable=False}"
         Icon="/Assets/avalonia-logo.ico"
         Title="{Binding WindowTitle}"
         Width="1200" Height="700"
@@ -135,7 +136,7 @@
                                    VerticalAlignment="Center"
                                    Margin="8,0,4,0"/>
                         <Button Grid.Column="1"
-                                Command="{Binding $parent[Window].DataContext.CloseDocumentCommand}"
+                                Command="{Binding DataContext.CloseDocumentCommand, ElementName=MainTabs}"
                                 CommandParameter="{Binding}"
                                 Width="16" Height="16"
                                 Padding="0"
