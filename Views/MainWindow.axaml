@@ -38,7 +38,6 @@
                 <MenuItem Header="_Table" Command="{Binding ActiveDocument.EditorViewModel.InsertTableCommand}" InputGesture="Ctrl+T"/>
             </MenuItem>
             <MenuItem Header="_View">
-                <MenuItem Header="Toggle _Theme" Command="{Binding ToggleThemeCommand}" InputGesture="Ctrl+Shift+T"/>
                 <MenuItem Header="Zoom _In" Command="{Binding ActiveDocument.PreviewViewModel.ZoomInCommand}" InputGesture="Ctrl+OemPlus"/>
                 <MenuItem Header="Zoom _Out" Command="{Binding ActiveDocument.PreviewViewModel.ZoomOutCommand}" InputGesture="Ctrl+OemMinus"/>
                 <MenuItem Header="_Reset Zoom" Command="{Binding ActiveDocument.PreviewViewModel.ResetZoomCommand}" InputGesture="Ctrl+D0"/>
@@ -54,7 +53,6 @@
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="15">
                     <TextBlock Text="{Binding ActiveDocument.EditorViewModel.State.WordCount, StringFormat='Words: {0}'}" VerticalAlignment="Center"/>
                     <TextBlock Text="{Binding ActiveDocument.EditorViewModel.State.CharCount, StringFormat='Characters: {0}'}" VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding IsDarkTheme, Converter={x:Static views:MainWindow.ThemeConverter}}" VerticalAlignment="Center"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -106,14 +104,6 @@
                         Classes="toolbar-btn"
                         Name="ReadModeButton">
                     <TextBlock Text="👁" FontSize="14"/>
-                </Button>
-                <Button Command="{Binding ToggleThemeCommand}"
-                        ToolTip.Tip="Toggle Theme (Ctrl+Shift+T)"
-                        Width="32" Height="32"
-                        Padding="0"
-                        Classes="toolbar-btn"
-                        Name="ThemeButton">
-                    <TextBlock Text="{Binding IsDarkTheme, Converter={x:Static views:MainWindow.ThemeIconConverter}}" FontSize="14"/>
                 </Button>
             </StackPanel>
         </Border>

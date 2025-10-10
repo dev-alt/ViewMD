@@ -16,7 +16,6 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private PreviewViewModel _previewViewModel;
     [ObservableProperty] private string _statusText = "Ready";
     [ObservableProperty] private bool _isDirty = false;
-    [ObservableProperty] private bool _isDarkTheme = false;
     [ObservableProperty] private string _windowTitle = "ViewMD";
 
     [ObservableProperty] private System.Collections.ObjectModel.ObservableCollection<DocumentViewModel> _documents = new();
@@ -168,17 +167,6 @@ public partial class MainViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void ToggleTheme()
-    {
-        IsDarkTheme = !IsDarkTheme;
-        if (ActiveDocument != null)
-        {
-            ActiveDocument.ApplyTheme(IsDarkTheme);
-        }
-        StatusText = IsDarkTheme ? "Dark theme enabled" : "Light theme enabled";
-    }
-
-    [RelayCommand]
     private void Exit()
     {
         if (IsDirty)
@@ -233,13 +221,9 @@ public partial class MainViewModel : ViewModelBase
         if (sp == null)
         {
             // Fallback (should not happen): create with bare VMs (limited functionality)
-            var fallback = new DocumentViewModel(new EditorViewModel(), new PreviewViewModel(null!));
-            fallback.ApplyTheme(IsDarkTheme);
-            return fallback;
+            return new DocumentViewModel(new EditorViewModel(), new PreviewViewModel(null!));
         }
-        var docVm = sp.GetRequiredService<DocumentViewModel>();
-        docVm.ApplyTheme(IsDarkTheme);
-        return docVm;
+        return sp.GetRequiredService<DocumentViewModel>();
     }
 
     private void SyncTopLevelWithActive()

@@ -11,7 +11,6 @@ public partial class DocumentViewModel : ViewModelBase
     [ObservableProperty] private EditorViewModel _editorViewModel;
     [ObservableProperty] private PreviewViewModel _previewViewModel;
     [ObservableProperty] private bool _isDirty;
-    [ObservableProperty] private bool _isDarkTheme;
     [ObservableProperty] private bool _isReadMode = true;
     [ObservableProperty] private string _title = "Untitled";
 
@@ -25,12 +24,6 @@ public partial class DocumentViewModel : ViewModelBase
             await _previewViewModel.UpdatePreviewAsync(text);
             IsDirty = CurrentDocument.Content != text;
         };
-    }
-
-    public void ApplyTheme(bool isDark)
-    {
-        IsDarkTheme = isDark;
-    _ = PreviewViewModel.UpdatePreviewAsync(EditorViewModel.Text);
     }
 
     public void ApplyDocument(MarkdownDocument document)

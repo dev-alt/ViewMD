@@ -12,7 +12,6 @@ public partial class PreviewViewModel : ViewModelBase
     [ObservableProperty] private string _htmlContent = string.Empty;
     [ObservableProperty] private double _scrollPosition;
     [ObservableProperty] private double _zoom = 1.0;
-    [ObservableProperty] private bool _isDarkTheme = false;
 
     private readonly IMarkdownService _markdownService;
     private CancellationTokenSource? _renderCts;
@@ -30,7 +29,7 @@ public partial class PreviewViewModel : ViewModelBase
         try
         {
             var html = await _markdownService.RenderToHtmlAsync(markdown, _renderCts.Token);
-            HtmlContent = _markdownService.GeneratePreviewHtml(html, IsDarkTheme);
+            HtmlContent = _markdownService.GeneratePreviewHtml(html, false);
         }
         catch (OperationCanceledException)
         {

@@ -79,7 +79,7 @@ public partial class EditorPreviewView : UserControl
             {
                 var text = _editor.Text ?? string.Empty;
                 await vm.PreviewViewModel.UpdatePreviewAsync(text);
-                UpdatePreview(text, vm.IsDarkTheme, vm.IsReadMode);
+                UpdatePreview(text, vm.IsReadMode);
             }
         };
     }
@@ -106,17 +106,12 @@ public partial class EditorPreviewView : UserControl
                 }
             };
 
-            // Subscribe to theme changes
+            // Subscribe to read mode changes
             vm.PropertyChanged += (s, args) =>
             {
-                if (args.PropertyName == nameof(vm.IsDarkTheme) && _editor != null)
-                {
-                    ApplyTheme(vm.IsDarkTheme);
-                    UpdatePreview(_editor.Text ?? string.Empty, vm.IsDarkTheme, vm.IsReadMode);
-                }
                 if (args.PropertyName == nameof(vm.IsReadMode) && _editor != null)
                 {
-                    UpdatePreview(_editor.Text ?? string.Empty, vm.IsDarkTheme, vm.IsReadMode);
+                    UpdatePreview(_editor.Text ?? string.Empty, vm.IsReadMode);
                 }
             };
 
@@ -127,10 +122,10 @@ public partial class EditorPreviewView : UserControl
                 {
                     _editor.Text = vm.EditorViewModel.Text;
                 }
-                ApplyTheme(vm.IsDarkTheme);
+                ApplyLightTheme();
 
                 // Trigger initial preview
-                UpdatePreview(_editor.Text ?? string.Empty, vm.IsDarkTheme, vm.IsReadMode);
+                UpdatePreview(_editor.Text ?? string.Empty, vm.IsReadMode);
 
                 // Focus the editor
                 Dispatcher.UIThread.Post(() => _editor.Focus(), DispatcherPriority.Background);
@@ -165,57 +160,31 @@ public partial class EditorPreviewView : UserControl
         _editor.Focus();
     }
 
-    private void ApplyTheme(bool isDarkTheme)
+    private void ApplyLightTheme()
     {
         if (_editor == null) return;
 
-        if (isDarkTheme)
-        {
-            // Dark theme
-            _editor.Background = new SolidColorBrush(Color.Parse("#1E1E1E"));
-            _editor.Foreground = new SolidColorBrush(Color.Parse("#D4D4D4"));
+        _editor.Background = Brushes.White;
+        _editor.Foreground = Brushes.Black;
 
-            if (_editorBorder != null)
-            {
-                _editorBorder.Background = new SolidColorBrush(Color.Parse("#1E1E1E"));
-                _editorBorder.BorderBrush = new SolidColorBrush(Color.Parse("#3E3E3E"));
-            }
-            if (_previewBorderRight != null)
-                _previewBorderRight.Background = new SolidColorBrush(Color.Parse("#1E1E1E"));
-            if (_previewBorderFull != null)
-                _previewBorderFull.Background = new SolidColorBrush(Color.Parse("#1E1E1E"));
-            if (_splitter != null)
-                _splitter.Background = new SolidColorBrush(Color.Parse("#3E3E3E"));
-            if (_placeholderRight != null)
-                _placeholderRight.Foreground = new SolidColorBrush(Color.Parse("#666666"));
-            if (_placeholderFull != null)
-                _placeholderFull.Foreground = new SolidColorBrush(Color.Parse("#666666"));
-        }
-        else
+        if (_editorBorder != null)
         {
-            // Light theme
-            _editor.Background = Brushes.White;
-            _editor.Foreground = Brushes.Black;
-
-            if (_editorBorder != null)
-            {
-                _editorBorder.Background = Brushes.White;
-                _editorBorder.BorderBrush = new SolidColorBrush(Color.Parse("#E0E0E0"));
-            }
-            if (_previewBorderRight != null)
-                _previewBorderRight.Background = Brushes.White;
-            if (_previewBorderFull != null)
-                _previewBorderFull.Background = Brushes.White;
-            if (_splitter != null)
-                _splitter.Background = new SolidColorBrush(Color.Parse("#E0E0E0"));
-            if (_placeholderRight != null)
-                _placeholderRight.Foreground = new SolidColorBrush(Color.Parse("#999999"));
-            if (_placeholderFull != null)
-                _placeholderFull.Foreground = new SolidColorBrush(Color.Parse("#999999"));
+            _editorBorder.Background = Brushes.White;
+            _editorBorder.BorderBrush = new SolidColorBrush(Color.Parse("#E0E0E0"));
         }
+        if (_previewBorderRight != null)
+            _previewBorderRight.Background = Brushes.White;
+        if (_previewBorderFull != null)
+            _previewBorderFull.Background = Brushes.White;
+        if (_splitter != null)
+            _splitter.Background = new SolidColorBrush(Color.Parse("#E0E0E0"));
+        if (_placeholderRight != null)
+            _placeholderRight.Foreground = new SolidColorBrush(Color.Parse("#999999"));
+        if (_placeholderFull != null)
+            _placeholderFull.Foreground = new SolidColorBrush(Color.Parse("#999999"));
     }
 
-    private void UpdatePreview(string markdownText, bool isDarkTheme, bool isReadMode)
+    private void UpdatePreview(string markdownText, bool isReadMode)
     {
         var target = isReadMode ? _previewContentFull : _previewContentRight;
         if (target == null || markdownText == _lastRenderedText)
@@ -229,9 +198,7 @@ public partial class EditorPreviewView : UserControl
             var placeholder = new TextBlock
             {
                 Text = "Start typing markdown in the editor to see the preview...",
-                Foreground = isDarkTheme
-                    ? new SolidColorBrush(Color.Parse("#666666"))
-                    : new SolidColorBrush(Color.Parse("#999999")),
+                Foreground = new SolidColorBrush(Color.Parse("#999999")),
                 FontStyle = FontStyle.Italic,
                 TextWrapping = TextWrapping.Wrap
             };
@@ -250,7 +217,7 @@ public partial class EditorPreviewView : UserControl
         // Render each block element
         foreach (var block in document)
         {
-            var element = RenderBlock(block, isDarkTheme);
+            var element = RenderBlock(block);
             if (element != null)
             {
                 target.Children.Add(element);
@@ -258,18 +225,18 @@ public partial class EditorPreviewView : UserControl
         }
     }
 
-    private Control? RenderBlock(Block block, bool isDarkTheme)
+    private Control? RenderBlock(Block block)
     {
-        var textColor = isDarkTheme ? Color.Parse("#D4D4D4") : Color.Parse("#333333");
-        var mutedColor = isDarkTheme ? Color.Parse("#999999") : Color.Parse("#666666");
+        var textColor = Color.Parse("#333333");
+        var mutedColor = Color.Parse("#666666");
 
         return block switch
         {
-            HeadingBlock heading => RenderHeading(heading, isDarkTheme, textColor),
+            HeadingBlock heading => RenderHeading(heading, textColor),
             ParagraphBlock paragraph => RenderParagraph(paragraph, textColor),
-            CodeBlock codeBlock => RenderCodeBlock(codeBlock, isDarkTheme),
+            CodeBlock codeBlock => RenderCodeBlock(codeBlock),
             ListBlock list => RenderList(list, textColor),
-            QuoteBlock quote => RenderQuote(quote, isDarkTheme, textColor),
+            QuoteBlock quote => RenderQuote(quote, textColor),
             ThematicBreakBlock => new Border
             {
                 Height = 1,
@@ -280,7 +247,7 @@ public partial class EditorPreviewView : UserControl
         };
     }
 
-    private Control RenderHeading(HeadingBlock heading, bool isDarkTheme, Color textColor)
+    private Control RenderHeading(HeadingBlock heading, Color textColor)
     {
         var text = ExtractText(heading.Inline);
         var fontSize = heading.Level switch
@@ -332,7 +299,7 @@ public partial class EditorPreviewView : UserControl
         };
     }
 
-    private Control RenderCodeBlock(CodeBlock codeBlock, bool isDarkTheme)
+    private Control RenderCodeBlock(CodeBlock codeBlock)
     {
         var code = new StringBuilder();
         foreach (var line in codeBlock.Lines)
@@ -340,15 +307,13 @@ public partial class EditorPreviewView : UserControl
             code.AppendLine(line.ToString());
         }
 
-        var bgColor = isDarkTheme ? Color.Parse("#2D2D2D") : Color.Parse("#F5F5F5");
-        var textColor = isDarkTheme ? Color.Parse("#D4D4D4") : Color.Parse("#333333");
+        var bgColor = Color.Parse("#F5F5F5");
+        var textColor = Color.Parse("#333333");
 
         return new Border
         {
             Background = new SolidColorBrush(bgColor),
-            BorderBrush = isDarkTheme
-                ? new SolidColorBrush(Color.Parse("#404040"))
-                : new SolidColorBrush(Color.Parse("#E0E0E0")),
+            BorderBrush = new SolidColorBrush(Color.Parse("#E0E0E0")),
             BorderThickness = new Thickness(1),
             CornerRadius = new CornerRadius(4),
             Padding = new Thickness(12),
@@ -402,7 +367,7 @@ public partial class EditorPreviewView : UserControl
         return panel;
     }
 
-    private Control RenderQuote(QuoteBlock quote, bool isDarkTheme, Color textColor)
+    private Control RenderQuote(QuoteBlock quote, Color textColor)
     {
         var panel = new StackPanel { Spacing = 4 };
 
@@ -422,8 +387,8 @@ public partial class EditorPreviewView : UserControl
             }
         }
 
-        var borderColor = isDarkTheme ? Color.Parse("#666666") : Color.Parse("#CCCCCC");
-        var bgColor = isDarkTheme ? Color.Parse("#2A2A2A") : Color.Parse("#F9F9F9");
+        var borderColor = Color.Parse("#CCCCCC");
+        var bgColor = Color.Parse("#F9F9F9");
 
         return new Border
         {

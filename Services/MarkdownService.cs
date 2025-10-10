@@ -46,12 +46,12 @@ public class MarkdownService : IMarkdownService
 
     public string GeneratePreviewHtml(string markdownHtml, bool isDarkTheme)
     {
-        var theme = isDarkTheme ? "dark" : "light";
-        var bgColor = isDarkTheme ? "#1e1e1e" : "#ffffff";
-        var textColor = isDarkTheme ? "#d4d4d4" : "#000000";
-        var borderColor = isDarkTheme ? "#3e3e3e" : "#e0e0e0";
-        var codeBlockBg = isDarkTheme ? "#2d2d2d" : "#f5f5f5";
-        var linkColor = isDarkTheme ? "#4FC3F7" : "#0066cc";
+        var theme = "light";
+        var bgColor = "#ffffff";
+        var textColor = "#000000";
+        var borderColor = "#e0e0e0";
+        var codeBlockBg = "#f5f5f5";
+        var linkColor = "#0066cc";
 
         return $@"<!DOCTYPE html>
 <html>
