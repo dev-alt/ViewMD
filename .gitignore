@@ -6,6 +6,11 @@ package/
 publish/
 certs/
 installer/
+
+# Claude
+.claude/
+.CLAUDE.md
+
 # Avalonia designer files
 *.axaml.cs.designer
 
