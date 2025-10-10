@@ -262,18 +262,18 @@ Notes:
 
 1) Generate stub icons (optional) and validate assets:
 ```powershell
-pwsh -ExecutionPolicy Bypass -File .\scripts\create-stub-icons.ps1
-pwsh -ExecutionPolicy Bypass -File .\scripts\check-msix-assets.ps1
+pwsh -ExecutionPolicy Bypass -File .\scripts\advanced\create-stub-icons.ps1
+pwsh -ExecutionPolicy Bypass -File .\scripts\advanced\check-msix-assets.ps1
 ```
 
 2) Build and create a signed MSIX (optional signing):
 ```powershell
 # Unsigned (for quick local testing, may require sideloading)
-pwsh -ExecutionPolicy Bypass -File .\scripts\package-msix.ps1 -Configuration Release -Runtime win-x64 -MsixPath ViewMD.msix
+pwsh -ExecutionPolicy Bypass -File .\scripts\advanced\package-msix.ps1 -Configuration Release -Runtime win-x64 -MsixPath ViewMD.msix
 
 # Signed (provide your PFX and password securely)
 $sec = Read-Host -AsSecureString "PFX password"
-pwsh -ExecutionPolicy Bypass -File .\scripts\package-msix.ps1 -Configuration Release -Runtime win-x64 -MsixPath ViewMD.msix -PfxPath ".\signing-test.pfx" -PfxPassword $sec
+pwsh -ExecutionPolicy Bypass -File .\scripts\advanced\package-msix.ps1 -Configuration Release -Runtime win-x64 -MsixPath ViewMD.msix -PfxPath ".\signing-test.pfx" -PfxPassword $sec
 ```
 
 3) Install the MSIX
@@ -285,3 +285,26 @@ Troubleshooting
 - Icons missing: run the asset check script and ensure all listed files exist under `Assets/`.
 - Default app choice: Windows manages default apps; your file associations appear, but users may need to confirm defaults in Settings.
 - Packaging tools: Make sure `MakeAppx.exe` and `signtool.exe` are available (Windows SDK).
+
+## Developer quick start
+
+- Run the app for debugging:
+	```powershell
+	pwsh -ExecutionPolicy Bypass -File .\scripts\dev-run.ps1
+	```
+	Pass files to open:
+	```powershell
+	pwsh -ExecutionPolicy Bypass -File .\scripts\dev-run.ps1 -- "C:\\Docs\\README.md" "C:\\Notes\\todo.txt"
+	```
+
+- Package for Microsoft Store (.msixbundle):
+	```powershell
+	pwsh -ExecutionPolicy Bypass -File .\scripts\package-store.ps1 -PfxPath .\certs\ViewMD.pfx
+	```
+	You will be prompted for the PFX password (used only for local/sideload testing; the Store re-signs). Artifacts: `ViewMD.msix` (x64), `ViewMD-arm64.msix`, `ViewMD.msixbundle`.
+
+- Install locally (sideload):
+	```powershell
+	pwsh -ExecutionPolicy Bypass -File .\scripts\install-local.ps1
+	```
+	If you see 0x800B010A, see `docs/LOCAL-SIDELOAD.md`.

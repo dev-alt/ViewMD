@@ -1,9 +1,9 @@
-; Inno Setup script for Markdown Viewer
+; Inno Setup script for ViewMD
 ; Requires Inno Setup (https://jrsoftware.org/isinfo.php)
 
-#define MyAppName "Markdown Viewer"
+#define MyAppName "ViewMD"
 #define MyAppVersion "1.0.0"
-#define MyAppPublisher "YourName"
+#define MyAppPublisher "Dev-Alt"
 #define MyAppURL "https://example.com"
 #define MyAppExeName "MarkdownViewer.exe"
 #define PublishDir "..\publish\win-x64"
@@ -14,10 +14,10 @@ AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
-DefaultDirName={pf}\MarkdownViewer
+DefaultDirName={pf}\ViewMD
 DisableProgramGroupPage=yes
 OutputDir=.
-OutputBaseFilename=MarkdownViewer-Setup
+OutputBaseFilename=ViewMD-Setup
 Compression=lzma
 SolidCompression=yes
 ArchitecturesInstallIn64BitMode=x64
@@ -27,6 +27,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
 Name: fileassoc; Description: "Associate .md files with {#MyAppName}"; Flags: unchecked
+Name: fileassoc_txt; Description: "Enable {#MyAppName} in Open with for .txt"; Flags: unchecked
+Name: fileassoc_txt_default; Description: "Associate .txt files with {#MyAppName} (set as default)"; Flags: unchecked
 
 [Files]
 Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -46,3 +48,8 @@ Root: HKCR; Subkey: ".md"; ValueType: string; ValueName: "Content Type"; ValueDa
 
 ; Applications listing for Open with
 Root: HKCR; Subkey: "Applications\\{#MyAppExeName}\\shell\\open\\command"; ValueType: string; ValueName: ""; ValueData: '"{app}\\{#MyAppExeName}" "%1"'
+; Allow Open with for .txt
+Root: HKCR; Subkey: ".txt\\OpenWithProgids"; ValueType: string; ValueName: "MarkdownViewer.Document"; ValueData: ""; Tasks: fileassoc_txt
+; Associate .txt as default (optional)
+Root: HKCR; Subkey: ".txt"; ValueType: string; ValueName: ""; ValueData: "MarkdownViewer.Document"; Tasks: fileassoc_txt_default
+Root: HKCR; Subkey: ".txt"; ValueType: string; ValueName: "Content Type"; ValueData: "text/plain"; Tasks: fileassoc_txt_default
