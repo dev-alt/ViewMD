@@ -1,6 +1,6 @@
-# Markdown Viewer
+# ViewMD
 
-A lightweight, feature-rich Markdown editor and viewer built with Avalonia UI and .NET 8.
+A lightweight, feature-rich Markdown reader and editor built with Avalonia UI and .NET 8.
 
 ## Features
 
@@ -199,10 +199,10 @@ To make `.md` files open with this app when double-clicked on Windows, you can r
 
 1) During installer/publish: add a file-association entry in your installer (recommended).
 
-2) Per-user registration script: run `scripts/register-md-association.ps1` with the path to your installed exe. This registers entries under HKCU so “Open with” works and lets you set Markdown Viewer as default in Windows Settings.
+2) Per-user registration script: run `scripts/register-md-association.ps1` with the path to your installed exe. This registers entries under HKCU so “Open with” works and lets you set ViewMD as default in Windows Settings.
 
 ```powershell
-pwsh -ExecutionPolicy Bypass -File .\scripts\register-md-association.ps1 -ExePath "C:\\Program Files\\MarkdownViewer\\MarkdownViewer.exe" -SetDefault
+pwsh -ExecutionPolicy Bypass -File .\scripts\register-md-association.ps1 -ExePath "C:\\Program Files\\ViewMD\\MarkdownViewer.exe" -SetDefault
 ```
 
 3) Manual registry merge: a `.reg` file is provided in `docs/associate-md.reg` as an example. Edit the executable path in that file to point to your installed `MarkdownViewer.exe`, then double-click the `.reg` file to merge it into the registry (requires appropriate permissions).
@@ -215,9 +215,9 @@ Example usage (for testing):
 dotnet publish -c Release -r win-x64 --self-contained -o publish\win-x64
 ```
 
-2. Edit `docs\associate-md.reg` to point to the published executable path (or copy the EXE into `C:\Program Files\\MarkdownViewer\\`).
+2. Edit `docs\associate-md.reg` to point to the published executable path (or copy the EXE into `C:\Program Files\\ViewMD\\`).
 
-3. Double-click the `.reg` file to merge it. After that, double-clicking a `.md` file should start Markdown Viewer and open the file.
+3. Double-click the `.reg` file to merge it. After that, double-clicking a `.md` file should start ViewMD and open the file.
 
 4. Alternatively for testing without registry edits, you can run the app with a file path argument:
 
@@ -252,8 +252,36 @@ Steps:
 3. Run the generated `MarkdownViewer-Setup.exe`. Choose the file association task if desired.
 
 ### MSIX (AppX) package
-An MSIX `AppxManifest.xml` template is under `installer/` with a file type association for `.md` and `.markdown`.
+An MSIX `AppxManifest.xml` template is under `installer/` with file type associations for `.md`, `.markdown`, and `.txt`, and full-trust desktop process enabled.
 
 Notes:
 - You’ll need to sign the package and supply required assets (icons) referenced in the manifest.
 - The app runs as a full-trust desktop app; ensure the executable path in the manifest matches your package layout.
+
+#### Quick MSIX packaging guide
+
+1) Generate stub icons (optional) and validate assets:
+```powershell
+pwsh -ExecutionPolicy Bypass -File .\scripts\create-stub-icons.ps1
+pwsh -ExecutionPolicy Bypass -File .\scripts\check-msix-assets.ps1
+```
+
+2) Build and create a signed MSIX (optional signing):
+```powershell
+# Unsigned (for quick local testing, may require sideloading)
+pwsh -ExecutionPolicy Bypass -File .\scripts\package-msix.ps1 -Configuration Release -Runtime win-x64 -MsixPath ViewMD.msix
+
+# Signed (provide your PFX and password securely)
+$sec = Read-Host -AsSecureString "PFX password"
+pwsh -ExecutionPolicy Bypass -File .\scripts\package-msix.ps1 -Configuration Release -Runtime win-x64 -MsixPath ViewMD.msix -PfxPath ".\signing-test.pfx" -PfxPassword $sec
+```
+
+3) Install the MSIX
+- Double-click the `.msix` file.
+- If signed with a self-signed cert, install the cert to CurrentUser\Trusted People first.
+- Ensure sideloading is enabled if required.
+
+Troubleshooting
+- Icons missing: run the asset check script and ensure all listed files exist under `Assets/`.
+- Default app choice: Windows manages default apps; your file associations appear, but users may need to confirm defaults in Settings.
+- Packaging tools: Make sure `MakeAppx.exe` and `signtool.exe` are available (Windows SDK).

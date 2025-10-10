@@ -81,7 +81,7 @@
                     CornerRadius="8"
                     Margin="40">
                 <Grid>
-                    <TextBlock Text="Drop .md files to open"
+                    <TextBlock Text="Drop .md/.txt files or folders to open"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"
                                Foreground="#FFFFFF"

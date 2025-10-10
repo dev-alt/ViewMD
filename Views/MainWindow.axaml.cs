@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using Avalonia.Input;
 // duplicate using removed
+using System.IO;
 
 namespace MarkdownViewer.Views;
 
@@ -112,6 +113,10 @@ public partial class MainWindow : Window
                 {
                     Patterns = new[] { "*.md", "*.markdown" }
                 },
+                new FilePickerFileType("Text Files")
+                {
+                    Patterns = new[] { "*.txt" }
+                },
                 new FilePickerFileType("All Files")
                 {
                     Patterns = new[] { "*.*" }
@@ -158,7 +163,21 @@ public partial class MainWindow : Window
             if (files != null)
             {
                 allow = files.Any(f => f.Name.EndsWith(".md", StringComparison.OrdinalIgnoreCase)
-                                     || f.Name.EndsWith(".markdown", StringComparison.OrdinalIgnoreCase));
+                                     || f.Name.EndsWith(".markdown", StringComparison.OrdinalIgnoreCase)
+                                     || f.Name.EndsWith(".txt", StringComparison.OrdinalIgnoreCase));
+            }
+        }
+        else
+        {
+#pragma warning disable CS0618
+            var names = e.Data.GetFileNames();
+#pragma warning restore CS0618
+            if (names != null)
+            {
+                allow = names.Any(p => p.EndsWith(".md", StringComparison.OrdinalIgnoreCase)
+                                    || p.EndsWith(".markdown", StringComparison.OrdinalIgnoreCase)
+                                    || p.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)
+                                    || Directory.Exists(p));
             }
         }
 
@@ -183,20 +202,51 @@ public partial class MainWindow : Window
 
     private async void OnDrop(object? sender, DragEventArgs e)
     {
-        try
+    int opened = 0;
+    int skipped = 0;
+    try
         {
             // Prefer cross-platform Avalonia API
             var storageFiles = e.Data.GetFiles();
-        string[] paths = storageFiles?.Select(f => f.Path.LocalPath)
-                    .Where(p => !string.IsNullOrWhiteSpace(p))
-                    .ToArray()
-                   ?? Array.Empty<string>();
+        var pathList = new System.Collections.Generic.List<string>();
+        if (storageFiles != null)
+        {
+            foreach (var f in storageFiles)
+            {
+                var p = f.Path.LocalPath;
+                if (!string.IsNullOrWhiteSpace(p)) pathList.Add(p);
+            }
+        }
+
+#pragma warning disable CS0618
+        var names = e.Data.GetFileNames();
+#pragma warning restore CS0618
+        if (names != null)
+        {
+            foreach (var n in names)
+            {
+                if (string.IsNullOrWhiteSpace(n)) continue;
+                if (File.Exists(n)) pathList.Add(n);
+                else if (Directory.Exists(n))
+                {
+                    // Recursively include .md/.markdown/.txt from folder
+                    var files = Directory.EnumerateFiles(n, "*.*", SearchOption.AllDirectories)
+                        .Where(fp => fp.EndsWith(".md", StringComparison.OrdinalIgnoreCase)
+                                  || fp.EndsWith(".markdown", StringComparison.OrdinalIgnoreCase)
+                                  || fp.EndsWith(".txt", StringComparison.OrdinalIgnoreCase));
+                    pathList.AddRange(files);
+                }
+            }
+        }
+
+        string[] paths = pathList.Distinct().ToArray();
 
         if (paths.Length == 0) return;
 
-        // Filter to markdown files
+        // Filter to supported files
         var mdPaths = paths.Where(p => p.EndsWith(".md", StringComparison.OrdinalIgnoreCase)
-                    || p.EndsWith(".markdown", StringComparison.OrdinalIgnoreCase))
+                    || p.EndsWith(".markdown", StringComparison.OrdinalIgnoreCase)
+                    || p.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
                 .ToArray();
             if (mdPaths.Length == 0) return;
 
@@ -206,8 +256,10 @@ public partial class MainWindow : Window
                 foreach (var path in mdPaths)
                 {
                     await vm.OpenFileFromPathAsync(path);
+                    opened++;
                 }
             }
+            skipped = paths.Length - opened;
         }
         catch
         {
@@ -219,6 +271,13 @@ public partial class MainWindow : Window
             if (overlay != null)
             {
                 overlay.IsVisible = false;
+            }
+            // Show a simple summary in the status bar via view model
+            if (DataContext is MainViewModel vm)
+            {
+                vm.StatusText = opened > 0
+                    ? $"Opened {opened} file(s){(skipped > 0 ? $", skipped {skipped}" : string.Empty)}"
+                    : "No supported files found";
             }
             e.Handled = true;
         }

@@ -2,7 +2,10 @@
 bin/
 obj/
 out/
-
+package/
+publish/
+certs/
+installer/
 # Avalonia designer files
 *.axaml.cs.designer
 
@@ -36,7 +39,7 @@ packages/
 *.log
 
 # Others
-*.vs/
+.vs/
 *.DS_Store
 *.swp
 *.bak
@@ -45,3 +48,25 @@ packages/
 # Avalonia resources
 Resources/Generated/
 test-sample.md
+
+# Packaging artifacts (keep repo clean of deployables)
+bundle_temp/
+*.msix
+*.appx
+*.msixbundle
+*.appxbundle
+*.msixupload
+*.appxupload
+
+# Certificates / signing material (sensitive)
+*.pfx
+*.p12
+*.snk
+*.key
+*.pem
+*.cer
+*.csr
+_temp_*.cer
+
+# Windows Store association (contains publisher details)
+Package.StoreAssociation.xml

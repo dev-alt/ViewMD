@@ -17,7 +17,7 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private string _statusText = "Ready";
     [ObservableProperty] private bool _isDirty = false;
     [ObservableProperty] private bool _isDarkTheme = false;
-    [ObservableProperty] private string _windowTitle = "Markdown Viewer";
+    [ObservableProperty] private string _windowTitle = "ViewMD";
 
     [ObservableProperty] private System.Collections.ObjectModel.ObservableCollection<DocumentViewModel> _documents = new();
     [ObservableProperty] private DocumentViewModel? _activeDocument;
@@ -117,7 +117,16 @@ public partial class MainViewModel : ViewModelBase
     {
     var saveDlg = ShowSaveFileDialogAsync;
     if (saveDlg is null) return;
-        var result = await saveDlg(null);
+        string? defaultExt = null;
+        if (ActiveDocument != null && !string.IsNullOrEmpty(ActiveDocument.CurrentDocument.FilePath))
+        {
+            var ext = System.IO.Path.GetExtension(ActiveDocument.CurrentDocument.FilePath);
+            if (!string.IsNullOrEmpty(ext) && ext.Equals(".txt", StringComparison.OrdinalIgnoreCase))
+            {
+                defaultExt = "txt";
+            }
+        }
+        var result = await saveDlg(defaultExt);
     if (string.IsNullOrEmpty(result)) return;
 
         if (ActiveDocument is null) return;
@@ -182,9 +191,9 @@ public partial class MainViewModel : ViewModelBase
     private void UpdateWindowTitle()
     {
         var isDirty = ActiveDocument?.IsDirty == true;
-        var fileName = ActiveDocument?.Title ?? "Untitled";
-        var dirtyMarker = isDirty ? "*" : "";
-        WindowTitle = $"{fileName}{dirtyMarker} - Markdown Viewer";
+    var fileName = ActiveDocument?.Title ?? "Untitled";
+    var dirtyMarker = isDirty ? "*" : "";
+    WindowTitle = $"{fileName}{dirtyMarker} - ViewMD";
     }
 
     // These methods will be called from the View

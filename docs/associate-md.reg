@@ -1,6 +1,6 @@
 Windows Registry Editor Version 5.00
 
-; Note: Edit the paths below to point to the installed location of MarkdownViewer.exe before merging.
+; Note: Edit the paths below to point to the installed location of MarkdownViewer.exe before merging (e.g., C:\\Program Files\\ViewMD\\).
 ; This file creates per-user associations under HKCU (preferred for testing). For machine-wide, use HKCR with care.
 
 [HKEY_CURRENT_USER\Software\Classes\.md]
@@ -11,10 +11,10 @@ Windows Registry Editor Version 5.00
 @="Markdown Document"
 
 [HKEY_CURRENT_USER\Software\Classes\MarkdownViewer.Document\DefaultIcon]
-@="\"C:\\Program Files\\MarkdownViewer\\MarkdownViewer.exe\",0"
+@="\"C:\\Program Files\\ViewMD\\MarkdownViewer.exe\",0"
 
 [HKEY_CURRENT_USER\Software\Classes\MarkdownViewer.Document\shell\open\command]
-@="\"C:\\Program Files\\MarkdownViewer\\MarkdownViewer.exe\" \"%1\""
+@="\"C:\\Program Files\\ViewMD\\MarkdownViewer.exe\" \"%1\""
 
 ; Make it appear in "Open with" lists
 [HKEY_CURRENT_USER\Software\Classes\.md\OpenWithProgids]
@@ -22,4 +22,8 @@ Windows Registry Editor Version 5.00
 
 ; Register the app under Applications so it shows up in Open with chooser
 [HKEY_CURRENT_USER\Software\Classes\Applications\MarkdownViewer.exe\shell\open\command]
-@="\"C:\\Program Files\\MarkdownViewer\\MarkdownViewer.exe\" \"%1\""
+@="\"C:\\Program Files\\ViewMD\\MarkdownViewer.exe\" \"%1\""
+
+; Also allow Open with for .txt
+[HKEY_CURRENT_USER\Software\Classes\.txt\OpenWithProgids]
+"MarkdownViewer.Document"=""
