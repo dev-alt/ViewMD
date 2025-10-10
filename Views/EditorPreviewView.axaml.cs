@@ -17,7 +17,8 @@ namespace MarkdownViewer.Views;
 public partial class EditorPreviewView : UserControl
 {
     private TextBox? _editor;
-    private StackPanel? _previewContent;
+    private StackPanel? _previewContentRight;
+    private StackPanel? _previewContentFull;
     private Border? _editorBorder;
     private Border? _previewBorder;
     private GridSplitter? _splitter;
@@ -35,7 +36,8 @@ public partial class EditorPreviewView : UserControl
     {
         AvaloniaXamlLoader.Load(this);
         _editor = this.FindControl<TextBox>("MarkdownEditor");
-        _previewContent = this.FindControl<StackPanel>("PreviewContent");
+    _previewContentRight = this.FindControl<StackPanel>("PreviewContentRight");
+    _previewContentFull = this.FindControl<StackPanel>("PreviewContentFull");
         _editorBorder = this.FindControl<Border>("EditorBorder");
         _previewBorder = this.FindControl<Border>("PreviewBorder");
         _splitter = this.FindControl<GridSplitter>("Splitter");
@@ -71,7 +73,7 @@ public partial class EditorPreviewView : UserControl
             {
                 var text = _editor.Text ?? string.Empty;
                 await vm.PreviewViewModel.UpdatePreviewAsync(text);
-                UpdatePreview(text, vm.IsDarkTheme);
+                UpdatePreview(text, vm.IsDarkTheme, vm.IsReadMode);
             }
         };
     }
@@ -80,7 +82,7 @@ public partial class EditorPreviewView : UserControl
     {
         base.OnDataContextChanged(e);
 
-        if (DataContext is DocumentViewModel vm)
+    if (DataContext is DocumentViewModel vm)
         {
             // Wire up editor to view model
             vm.EditorViewModel.TextInsertRequested += OnTextInsertRequested;
@@ -104,7 +106,11 @@ public partial class EditorPreviewView : UserControl
                 if (args.PropertyName == nameof(vm.IsDarkTheme) && _editor != null)
                 {
                     ApplyTheme(vm.IsDarkTheme);
-                    UpdatePreview(_editor.Text ?? string.Empty, vm.IsDarkTheme);
+                    UpdatePreview(_editor.Text ?? string.Empty, vm.IsDarkTheme, vm.IsReadMode);
+                }
+                if (args.PropertyName == nameof(vm.IsReadMode) && _editor != null)
+                {
+                    UpdatePreview(_editor.Text ?? string.Empty, vm.IsDarkTheme, vm.IsReadMode);
                 }
             };
 
@@ -118,7 +124,7 @@ public partial class EditorPreviewView : UserControl
                 ApplyTheme(vm.IsDarkTheme);
 
                 // Trigger initial preview
-                UpdatePreview(_editor.Text ?? string.Empty, vm.IsDarkTheme);
+                UpdatePreview(_editor.Text ?? string.Empty, vm.IsDarkTheme, vm.IsReadMode);
 
                 // Focus the editor
                 Dispatcher.UIThread.Post(() => _editor.Focus(), DispatcherPriority.Background);
@@ -185,13 +191,14 @@ public partial class EditorPreviewView : UserControl
         }
     }
 
-    private void UpdatePreview(string markdownText, bool isDarkTheme)
+    private void UpdatePreview(string markdownText, bool isDarkTheme, bool isReadMode)
     {
-        if (_previewContent == null || markdownText == _lastRenderedText)
+        var target = isReadMode ? _previewContentFull : _previewContentRight;
+        if (target == null || markdownText == _lastRenderedText)
             return;
 
         _lastRenderedText = markdownText;
-        _previewContent.Children.Clear();
+        target.Children.Clear();
 
         if (string.IsNullOrWhiteSpace(markdownText))
         {
@@ -204,7 +211,7 @@ public partial class EditorPreviewView : UserControl
                 FontStyle = FontStyle.Italic,
                 TextWrapping = TextWrapping.Wrap
             };
-            _previewContent.Children.Add(placeholder);
+            target.Children.Add(placeholder);
             return;
         }
 
@@ -222,7 +229,7 @@ public partial class EditorPreviewView : UserControl
             var element = RenderBlock(block, isDarkTheme);
             if (element != null)
             {
-                _previewContent.Children.Add(element);
+                target.Children.Add(element);
             }
         }
     }

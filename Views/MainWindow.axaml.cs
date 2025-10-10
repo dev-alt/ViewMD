@@ -7,6 +7,9 @@ using MarkdownViewer.ViewModels;
 using System;
 using System.Globalization;
 using System.Threading.Tasks;
+using System.Linq;
+using Avalonia.Input;
+using Avalonia.Platform.Storage;
 
 namespace MarkdownViewer.Views;
 
@@ -22,6 +25,10 @@ public partial class MainWindow : Window
         InitializeComponent();
         _statusBar = this.FindControl<Border>("StatusBar");
         SetupViewModel();
+
+        // Drag-and-drop support
+        this.AddHandler(DragDrop.DragOverEvent, OnDragOver);
+        this.AddHandler(DragDrop.DropEvent, OnDrop);
     }
 
     private void SetupViewModel()
@@ -126,5 +133,56 @@ public partial class MainWindow : Window
         });
 
         return file?.Path.LocalPath;
+    }
+
+    private void OnDragOver(object? sender, DragEventArgs e)
+    {
+    if (e.Data.Contains(DataFormats.FileNames) || e.Data.Contains(DataFormats.Files))
+        {
+            e.DragEffects = DragDropEffects.Copy;
+        }
+        else
+        {
+            e.DragEffects = DragDropEffects.None;
+        }
+        e.Handled = true;
+    }
+
+    private async void OnDrop(object? sender, DragEventArgs e)
+    {
+        try
+        {
+            // Prefer cross-platform Avalonia API
+            var storageFiles = e.Data.GetFiles();
+        string[] paths = storageFiles?.Select(f => f.Path.LocalPath)
+                    .Where(p => !string.IsNullOrWhiteSpace(p))
+                    .ToArray()
+                   ?? Array.Empty<string>();
+
+        if (paths.Length == 0) return;
+
+        // Filter to markdown files
+        var mdPaths = paths.Where(p => p.EndsWith(".md", StringComparison.OrdinalIgnoreCase)
+                    || p.EndsWith(".markdown", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+            if (mdPaths.Length == 0) return;
+
+            if (DataContext is MainViewModel vm)
+            {
+                // Open first file in active window, others in new tabs (existing behavior adds tabs)
+                foreach (var path in mdPaths)
+                {
+                    await vm.OpenFileFromPathAsync(path);
+                }
+            }
+        }
+        catch
+        {
+            // ignore
+        }
+        finally
+        {
+            e.Handled = true;
+        }
     }
 }

@@ -30,18 +30,34 @@
         </Border>
 
         <!-- Splitter -->
-    <GridSplitter Grid.Row="1" Grid.Column="1"
+    <GridSplitter Grid.Row="1" Grid.Column="1" IsVisible="{Binding IsReadMode, Converter={x:Static conv:BoolNotConverter.Instance}}"
                       Background="#E0E0E0"
                       ResizeDirection="Columns"
                       Name="Splitter"/>
 
         <!-- Preview Panel -->
-    <Border Grid.Row="1" Grid.Column="2" Background="#FFFFFF" Name="PreviewBorder">
-            <ScrollViewer Name="PreviewScroller"
+    <!-- Edit mode preview (right pane) -->
+    <Border Grid.Row="1" Grid.Column="2" Background="#FFFFFF" Name="PreviewBorderRight" IsVisible="{Binding IsReadMode, Converter={x:Static conv:BoolNotConverter.Instance}}">
+            <ScrollViewer Name="PreviewScrollerRight"
                          VerticalScrollBarVisibility="Auto"
                          HorizontalScrollBarVisibility="Auto"
                          Padding="20">
-                <StackPanel Name="PreviewContent" Spacing="8">
+                <StackPanel Name="PreviewContentRight" Spacing="8">
+                    <TextBlock Text="Start typing markdown in the editor to see the preview..."
+                              Foreground="#999999"
+                              FontStyle="Italic"
+                              TextWrapping="Wrap"/>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Read mode preview (full width) -->
+        <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Background="#FFFFFF" Name="PreviewBorderFull" IsVisible="{Binding IsReadMode}">
+            <ScrollViewer Name="PreviewScrollerFull"
+                         VerticalScrollBarVisibility="Auto"
+                         HorizontalScrollBarVisibility="Auto"
+                         Padding="20">
+                <StackPanel Name="PreviewContentFull" Spacing="8">
                     <TextBlock Text="Start typing markdown in the editor to see the preview..."
                               Foreground="#999999"
                               FontStyle="Italic"
