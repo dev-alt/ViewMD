@@ -7,7 +7,6 @@
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="700"
         x:Class="MarkdownViewer.Views.MainWindow"
         x:DataType="vm:MainViewModel"
-        d:DataContext="{d:DesignInstance Type=vm:MainViewModel, IsDesignTimeCreatable=False}"
         Icon="/Assets/avalonia-logo.ico"
         Title="{Binding WindowTitle}"
         Width="1200" Height="700"
@@ -16,7 +15,7 @@
     <Design.DataContext>
         <vm:MainViewModel/>
     </Design.DataContext>
-
+    
     <DockPanel>
         <!-- Menu Bar -->
         <Menu DockPanel.Dock="Top">

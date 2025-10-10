@@ -24,6 +24,19 @@ public partial class MainViewModel : ViewModelBase
     private readonly IFileService _fileService;
     private readonly IExportService _exportService;
 
+    
+    public MainViewModel()
+    {
+        // Design-time only: minimal initialization without DI
+        Documents = [];
+        ActiveDocument = null;
+        _editorViewModel = new EditorViewModel();
+        _previewViewModel = new PreviewViewModel(null!);
+        _currentDocument = new MarkdownDocument();
+        _fileService = null!;
+        _exportService = null!;
+    }
+    
     public MainViewModel(
         IFileService fileService,
         IExportService exportService,

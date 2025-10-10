@@ -1,17 +1,12 @@
 using Avalonia.Controls;
-using Avalonia.Data.Converters;
 using Avalonia.Platform.Storage;
 using Avalonia.Interactivity;
-using Avalonia.Media;
-using Avalonia.VisualTree;
 using MarkdownViewer.ViewModels;
 using System;
-using System.Globalization;
 using System.Threading.Tasks;
 using System.Linq;
 using Avalonia.Input;
 using System.IO;
-using Avalonia;
 
 namespace MarkdownViewer.Views;
 
@@ -19,6 +14,7 @@ public partial class MainWindow : Window
 {
     public MainWindow()
     {
+        
         InitializeComponent();
         SetupViewModel();
 
@@ -216,7 +212,11 @@ public partial class MainWindow : Window
         }
         catch
         {
-            // ignore
+                // Log any errors and update status message
+                if (DataContext is MainViewModel vm)
+                {
+                    vm.StatusText = "Error processing dropped files";
+                }
         }
         finally
         {

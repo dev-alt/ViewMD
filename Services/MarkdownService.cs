@@ -1,8 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Markdig;
-using Markdig.Extensions.TaskLists;
-using Markdig.Extensions.Tables;
 
 namespace MarkdownViewer.Services;
 
