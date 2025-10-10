@@ -58,8 +58,8 @@
             </Grid>
         </Border>
 
-        <!-- Tabs: one Editor/Preview per document -->
-        <TabControl ItemsSource="{Binding Documents}" SelectedItem="{Binding ActiveDocument}">
+    <!-- Tabs: one Editor/Preview per document -->
+        <TabControl x:Name="MainTabs" ItemsSource="{Binding Documents}" SelectedItem="{Binding ActiveDocument}">
             <TabControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:DocumentViewModel">
                     <TextBlock Text="{Binding Title}"/>
@@ -71,5 +71,24 @@
                 </DataTemplate>
             </TabControl.ContentTemplate>
         </TabControl>
+
+        <!-- Drag & Drop overlay -->
+        <Border x:Name="DropOverlay"
+                Background="#80000000"
+                IsVisible="False">
+            <Border BorderBrush="#FFFFFFFF"
+                    BorderThickness="2"
+                    CornerRadius="8"
+                    Margin="40">
+                <Grid>
+                    <TextBlock Text="Drop .md files to open"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Foreground="#FFFFFF"
+                               FontSize="20"
+                               FontWeight="Bold"/>
+                </Grid>
+            </Border>
+        </Border>
     </DockPanel>
 </Window>

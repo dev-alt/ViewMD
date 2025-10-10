@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Data.Converters;
 using Avalonia.Platform.Storage;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.VisualTree;
 using MarkdownViewer.ViewModels;
@@ -9,7 +10,7 @@ using System.Globalization;
 using System.Threading.Tasks;
 using System.Linq;
 using Avalonia.Input;
-using Avalonia.Platform.Storage;
+// duplicate using removed
 
 namespace MarkdownViewer.Views;
 
@@ -27,8 +28,20 @@ public partial class MainWindow : Window
         SetupViewModel();
 
         // Drag-and-drop support
-        this.AddHandler(DragDrop.DragOverEvent, OnDragOver);
+    this.AddHandler(DragDrop.DragEnterEvent, OnDragOver);
+    this.AddHandler(DragDrop.DragLeaveEvent, OnDragLeave);
+    this.AddHandler(DragDrop.DragOverEvent, OnDragOver);
         this.AddHandler(DragDrop.DropEvent, OnDrop);
+
+        // Also attach to TabControl area for direct drops
+        var tabs = this.FindControl<TabControl>("MainTabs");
+        if (tabs != null)
+        {
+            tabs.AddHandler(DragDrop.DragEnterEvent, OnDragOver);
+            tabs.AddHandler(DragDrop.DragLeaveEvent, OnDragLeave);
+            tabs.AddHandler(DragDrop.DragOverEvent, OnDragOver);
+            tabs.AddHandler(DragDrop.DropEvent, OnDrop);
+        }
     }
 
     private void SetupViewModel()
@@ -137,15 +150,35 @@ public partial class MainWindow : Window
 
     private void OnDragOver(object? sender, DragEventArgs e)
     {
-    if (e.Data.Contains(DataFormats.FileNames) || e.Data.Contains(DataFormats.Files))
+        // Only allow if the payload includes at least one .md file
+        bool allow = false;
+        if (e.Data.Contains(DataFormats.Files))
         {
-            e.DragEffects = DragDropEffects.Copy;
+            var files = e.Data.GetFiles();
+            if (files != null)
+            {
+                allow = files.Any(f => f.Name.EndsWith(".md", StringComparison.OrdinalIgnoreCase)
+                                     || f.Name.EndsWith(".markdown", StringComparison.OrdinalIgnoreCase));
+            }
         }
-        else
+
+        e.DragEffects = allow ? DragDropEffects.Copy : DragDropEffects.None;
+
+        var overlay = this.FindControl<Border>("DropOverlay");
+        if (overlay != null)
         {
-            e.DragEffects = DragDropEffects.None;
+            overlay.IsVisible = allow;
         }
         e.Handled = true;
+    }
+
+    private void OnDragLeave(object? sender, RoutedEventArgs e)
+    {
+        var overlay = this.FindControl<Border>("DropOverlay");
+        if (overlay != null)
+        {
+            overlay.IsVisible = false;
+        }
     }
 
     private async void OnDrop(object? sender, DragEventArgs e)
@@ -182,6 +215,11 @@ public partial class MainWindow : Window
         }
         finally
         {
+            var overlay = this.FindControl<Border>("DropOverlay");
+            if (overlay != null)
+            {
+                overlay.IsVisible = false;
+            }
             e.Handled = true;
         }
     }
