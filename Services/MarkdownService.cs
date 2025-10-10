@@ -59,16 +59,27 @@ public class MarkdownService : IMarkdownService
     <meta charset=""UTF-8"">
     <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
     <style>
+        * {{
+            box-sizing: border-box;
+        }}
+
         body {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
             line-height: 1.6;
             color: {textColor};
             background-color: {bgColor};
-            padding: 20px;
+            padding: 2rem;
             margin: 0;
-            max-width: 900px;
+            max-width: min(900px, 100%);
             margin-left: auto;
             margin-right: auto;
+        }}
+
+        @media (max-width: 768px) {{
+            body {{
+                padding: 1rem;
+                font-size: 14px;
+            }}
         }}
 
         h1, h2, h3, h4, h5, h6 {{
@@ -121,7 +132,9 @@ public class MarkdownService : IMarkdownService
             background-color: {codeBlockBg};
             border-radius: 3px;
             padding: 16px;
-            overflow: auto;
+            overflow-x: auto;
+            overflow-y: hidden;
+            max-width: 100%;
         }}
 
         pre code {{
@@ -134,6 +147,8 @@ public class MarkdownService : IMarkdownService
             border-collapse: collapse;
             width: 100%;
             margin-bottom: 16px;
+            display: block;
+            overflow-x: auto;
         }}
 
         table th, table td {{
@@ -184,6 +199,8 @@ public class MarkdownService : IMarkdownService
         img {{
             max-width: 100%;
             height: auto;
+            display: block;
+            margin: 1rem 0;
         }}
 
         kbd {{

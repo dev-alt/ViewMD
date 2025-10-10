@@ -10,7 +10,7 @@
 
     <Grid RowDefinitions="0,*" ColumnDefinitions="*,5,*">
         <!-- Editor Panel -->
-    <Border Grid.Row="1" Grid.Column="0" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0" Name="EditorBorder" Background="#FFFFFF" IsVisible="{Binding IsReadMode, Converter={x:Static conv:BoolNotConverter.Instance}}">
+        <Border Grid.Row="1" Grid.Column="0" BorderThickness="0,0,1,0" Name="EditorBorder" IsVisible="{Binding IsReadMode, Converter={x:Static conv:BoolNotConverter.Instance}}">
             <TextBox
                 Name="MarkdownEditor"
                 FontFamily="Consolas,Courier New,monospace"
@@ -18,51 +18,52 @@
                 AcceptsReturn="True"
                 AcceptsTab="True"
                 TextWrapping="Wrap"
-                Background="#FFFFFF"
-                Foreground="#000000"
                 BorderThickness="0"
                 VerticalAlignment="Stretch"
                 HorizontalAlignment="Stretch"
                 VerticalContentAlignment="Top"
                 Padding="10"
-        IsReadOnly="{Binding IsReadMode}"
-        Text="# Start Typing Your Markdown Here!&#x0A;&#x0A;Try:&#x0A;- **Bold text**&#x0A;- *Italic text*&#x0A;- Lists and more&#x0A;&#x0A;Press Ctrl+Shift+T to toggle dark mode"/>
+                IsReadOnly="{Binding IsReadMode}"
+                Text="# Start Typing Your Markdown Here!&#x0A;&#x0A;Try:&#x0A;- **Bold text**&#x0A;- *Italic text*&#x0A;- Lists and more&#x0A;&#x0A;Press Ctrl+Shift+T to toggle dark mode"/>
         </Border>
 
         <!-- Splitter -->
-    <GridSplitter Grid.Row="1" Grid.Column="1" IsVisible="{Binding IsReadMode, Converter={x:Static conv:BoolNotConverter.Instance}}"
-                      Background="#E0E0E0"
+        <GridSplitter Grid.Row="1" Grid.Column="1" IsVisible="{Binding IsReadMode, Converter={x:Static conv:BoolNotConverter.Instance}}"
                       ResizeDirection="Columns"
                       Name="Splitter"/>
 
         <!-- Preview Panel -->
-    <!-- Edit mode preview (right pane) -->
-    <Border Grid.Row="1" Grid.Column="2" Background="#FFFFFF" Name="PreviewBorderRight" IsVisible="{Binding IsReadMode, Converter={x:Static conv:BoolNotConverter.Instance}}">
+        <!-- Edit mode preview (right pane) -->
+        <Border Grid.Row="1" Grid.Column="2" Name="PreviewBorderRight" IsVisible="{Binding IsReadMode, Converter={x:Static conv:BoolNotConverter.Instance}}">
             <ScrollViewer Name="PreviewScrollerRight"
                          VerticalScrollBarVisibility="Auto"
-                         HorizontalScrollBarVisibility="Auto"
-                         Padding="20">
-                <StackPanel Name="PreviewContentRight" Spacing="8">
+                         HorizontalScrollBarVisibility="Disabled"
+                         Padding="16">
+                <StackPanel Name="PreviewContentRight" Spacing="8" MaxWidth="1200">
                     <TextBlock Text="Start typing markdown in the editor to see the preview..."
-                              Foreground="#999999"
                               FontStyle="Italic"
-                              TextWrapping="Wrap"/>
+                              TextWrapping="Wrap"
+                              Name="PlaceholderRight"/>
                 </StackPanel>
             </ScrollViewer>
         </Border>
 
         <!-- Read mode preview (full width) -->
-        <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Background="#FFFFFF" Name="PreviewBorderFull" IsVisible="{Binding IsReadMode}">
+        <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Name="PreviewBorderFull" IsVisible="{Binding IsReadMode}">
             <ScrollViewer Name="PreviewScrollerFull"
                          VerticalScrollBarVisibility="Auto"
-                         HorizontalScrollBarVisibility="Auto"
-                         Padding="20">
-                <StackPanel Name="PreviewContentFull" Spacing="8">
-                    <TextBlock Text="Start typing markdown in the editor to see the preview..."
-                              Foreground="#999999"
-                              FontStyle="Italic"
-                              TextWrapping="Wrap"/>
-                </StackPanel>
+                         HorizontalScrollBarVisibility="Disabled">
+                <Panel HorizontalAlignment="Center">
+                    <StackPanel Name="PreviewContentFull"
+                               Spacing="8"
+                               MaxWidth="900"
+                               Margin="40,40,40,40">
+                        <TextBlock Text="Start typing markdown in the editor to see the preview..."
+                                  FontStyle="Italic"
+                                  TextWrapping="Wrap"
+                                  Name="PlaceholderFull"/>
+                    </StackPanel>
+                </Panel>
             </ScrollViewer>
         </Border>
     </Grid>

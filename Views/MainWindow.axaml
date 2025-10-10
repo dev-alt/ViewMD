@@ -8,8 +8,9 @@
         x:Class="MarkdownViewer.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Icon="/Assets/avalonia-logo.ico"
-    Title="{Binding WindowTitle}"
-        Width="1200" Height="700">
+        Title="{Binding WindowTitle}"
+        Width="1200" Height="700"
+        DragDrop.AllowDrop="True">
 
     <Design.DataContext>
         <vm:MainViewModel/>

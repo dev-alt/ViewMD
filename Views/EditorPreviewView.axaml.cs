@@ -20,8 +20,11 @@ public partial class EditorPreviewView : UserControl
     private StackPanel? _previewContentRight;
     private StackPanel? _previewContentFull;
     private Border? _editorBorder;
-    private Border? _previewBorder;
+    private Border? _previewBorderRight;
+    private Border? _previewBorderFull;
     private GridSplitter? _splitter;
+    private TextBlock? _placeholderRight;
+    private TextBlock? _placeholderFull;
     private DispatcherTimer? _renderTimer;
     private string _lastRenderedText = string.Empty;
 
@@ -36,11 +39,14 @@ public partial class EditorPreviewView : UserControl
     {
         AvaloniaXamlLoader.Load(this);
         _editor = this.FindControl<TextBox>("MarkdownEditor");
-    _previewContentRight = this.FindControl<StackPanel>("PreviewContentRight");
-    _previewContentFull = this.FindControl<StackPanel>("PreviewContentFull");
+        _previewContentRight = this.FindControl<StackPanel>("PreviewContentRight");
+        _previewContentFull = this.FindControl<StackPanel>("PreviewContentFull");
         _editorBorder = this.FindControl<Border>("EditorBorder");
-        _previewBorder = this.FindControl<Border>("PreviewBorder");
+        _previewBorderRight = this.FindControl<Border>("PreviewBorderRight");
+        _previewBorderFull = this.FindControl<Border>("PreviewBorderFull");
         _splitter = this.FindControl<GridSplitter>("Splitter");
+        _placeholderRight = this.FindControl<TextBlock>("PlaceholderRight");
+        _placeholderFull = this.FindControl<TextBlock>("PlaceholderFull");
     }
 
     private void SetupEditor()
@@ -170,11 +176,20 @@ public partial class EditorPreviewView : UserControl
             _editor.Foreground = new SolidColorBrush(Color.Parse("#D4D4D4"));
 
             if (_editorBorder != null)
+            {
+                _editorBorder.Background = new SolidColorBrush(Color.Parse("#1E1E1E"));
                 _editorBorder.BorderBrush = new SolidColorBrush(Color.Parse("#3E3E3E"));
-            if (_previewBorder != null)
-                _previewBorder.Background = new SolidColorBrush(Color.Parse("#1E1E1E"));
+            }
+            if (_previewBorderRight != null)
+                _previewBorderRight.Background = new SolidColorBrush(Color.Parse("#1E1E1E"));
+            if (_previewBorderFull != null)
+                _previewBorderFull.Background = new SolidColorBrush(Color.Parse("#1E1E1E"));
             if (_splitter != null)
                 _splitter.Background = new SolidColorBrush(Color.Parse("#3E3E3E"));
+            if (_placeholderRight != null)
+                _placeholderRight.Foreground = new SolidColorBrush(Color.Parse("#666666"));
+            if (_placeholderFull != null)
+                _placeholderFull.Foreground = new SolidColorBrush(Color.Parse("#666666"));
         }
         else
         {
@@ -183,11 +198,20 @@ public partial class EditorPreviewView : UserControl
             _editor.Foreground = Brushes.Black;
 
             if (_editorBorder != null)
+            {
+                _editorBorder.Background = Brushes.White;
                 _editorBorder.BorderBrush = new SolidColorBrush(Color.Parse("#E0E0E0"));
-            if (_previewBorder != null)
-                _previewBorder.Background = Brushes.White;
+            }
+            if (_previewBorderRight != null)
+                _previewBorderRight.Background = Brushes.White;
+            if (_previewBorderFull != null)
+                _previewBorderFull.Background = Brushes.White;
             if (_splitter != null)
                 _splitter.Background = new SolidColorBrush(Color.Parse("#E0E0E0"));
+            if (_placeholderRight != null)
+                _placeholderRight.Foreground = new SolidColorBrush(Color.Parse("#999999"));
+            if (_placeholderFull != null)
+                _placeholderFull.Foreground = new SolidColorBrush(Color.Parse("#999999"));
         }
     }
 
