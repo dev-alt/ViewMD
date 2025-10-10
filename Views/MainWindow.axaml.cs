@@ -10,8 +10,8 @@ using System.Globalization;
 using System.Threading.Tasks;
 using System.Linq;
 using Avalonia.Input;
-// duplicate using removed
 using System.IO;
+using Avalonia;
 
 namespace MarkdownViewer.Views;
 
@@ -20,18 +20,25 @@ public partial class MainWindow : Window
     public static readonly FuncValueConverter<bool, string> ThemeConverter =
         new FuncValueConverter<bool, string>(isDark => isDark ? "Dark" : "Light");
 
+    public static readonly FuncValueConverter<bool, string> ThemeIconConverter =
+        new FuncValueConverter<bool, string>(isDark => isDark ? "🌙" : "☀️");
+
     private Border? _statusBar;
+    private Border? _toolbarBorder;
+    private TabControl? _tabControl;
 
     public MainWindow()
     {
         InitializeComponent();
         _statusBar = this.FindControl<Border>("StatusBar");
+        _toolbarBorder = this.FindControl<Border>("ToolbarBorder");
+        _tabControl = this.FindControl<TabControl>("TabControl");
         SetupViewModel();
 
         // Drag-and-drop support
-    this.AddHandler(DragDrop.DragEnterEvent, OnDragOver);
-    this.AddHandler(DragDrop.DragLeaveEvent, OnDragLeave);
-    this.AddHandler(DragDrop.DragOverEvent, OnDragOver);
+        this.AddHandler(DragDrop.DragEnterEvent, OnDragOver);
+        this.AddHandler(DragDrop.DragLeaveEvent, OnDragLeave);
+        this.AddHandler(DragDrop.DragOverEvent, OnDragOver);
         this.AddHandler(DragDrop.DropEvent, OnDrop);
 
         // Also attach to TabControl area for direct drops
@@ -81,6 +88,20 @@ public partial class MainWindow : Window
                     tb.Foreground = new SolidColorBrush(Color.Parse("#D4D4D4"));
                 }
             }
+
+            // Apply toolbar theme
+            if (_toolbarBorder != null)
+            {
+                _toolbarBorder.Background = new SolidColorBrush(Color.Parse("#252526"));
+                _toolbarBorder.BorderBrush = new SolidColorBrush(Color.Parse("#3E3E3E"));
+                _toolbarBorder.BorderThickness = new Thickness(0, 0, 0, 1);
+            }
+
+            // Apply tab theme
+            if (_tabControl != null)
+            {
+                _tabControl.Background = new SolidColorBrush(Color.Parse("#1E1E1E"));
+            }
         }
         else
         {
@@ -91,6 +112,20 @@ public partial class MainWindow : Window
                 {
                     tb.Foreground = Brushes.Black;
                 }
+            }
+
+            // Apply toolbar theme
+            if (_toolbarBorder != null)
+            {
+                _toolbarBorder.Background = new SolidColorBrush(Color.Parse("#F3F3F3"));
+                _toolbarBorder.BorderBrush = new SolidColorBrush(Color.Parse("#E0E0E0"));
+                _toolbarBorder.BorderThickness = new Thickness(0, 0, 0, 1);
+            }
+
+            // Apply tab theme
+            if (_tabControl != null)
+            {
+                _tabControl.Background = Brushes.White;
             }
         }
     }

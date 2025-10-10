@@ -59,11 +59,85 @@
             </Grid>
         </Border>
 
-    <!-- Tabs: one Editor/Preview per document -->
-        <TabControl x:Name="MainTabs" ItemsSource="{Binding Documents}" SelectedItem="{Binding ActiveDocument}">
+        <!-- Toolbar -->
+        <Border DockPanel.Dock="Top" Name="ToolbarBorder" Padding="8,6">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+                <!-- Formatting Tools -->
+                <Button Command="{Binding ActiveDocument.EditorViewModel.InsertBoldCommand}"
+                        ToolTip.Tip="Bold (Ctrl+B)"
+                        Width="32" Height="32"
+                        Padding="0"
+                        Classes="toolbar-btn"
+                        Name="BoldButton">
+                    <TextBlock Text="B" FontWeight="Bold" FontSize="14"/>
+                </Button>
+                <Button Command="{Binding ActiveDocument.EditorViewModel.InsertItalicCommand}"
+                        ToolTip.Tip="Italic (Ctrl+I)"
+                        Width="32" Height="32"
+                        Padding="0"
+                        Classes="toolbar-btn"
+                        Name="ItalicButton">
+                    <TextBlock Text="I" FontStyle="Italic" FontSize="14"/>
+                </Button>
+                <Button Command="{Binding ActiveDocument.EditorViewModel.InsertLinkCommand}"
+                        ToolTip.Tip="Insert Link (Ctrl+K)"
+                        Width="32" Height="32"
+                        Padding="0"
+                        Classes="toolbar-btn"
+                        Name="LinkButton">
+                    <TextBlock Text="🔗" FontSize="14"/>
+                </Button>
+                <Button Command="{Binding ActiveDocument.EditorViewModel.InsertCodeBlockCommand}"
+                        ToolTip.Tip="Code Block (Ctrl+Shift+C)"
+                        Width="32" Height="32"
+                        Padding="0"
+                        Classes="toolbar-btn"
+                        Name="CodeButton">
+                    <TextBlock Text="&lt;/&gt;" FontSize="12" FontFamily="Consolas"/>
+                </Button>
+
+                <Separator Width="1" Height="24" Margin="4,0"/>
+
+                <!-- View Tools -->
+                <Button Command="{Binding ToggleReadModeCommand}"
+                        ToolTip.Tip="Toggle Read Mode (F6)"
+                        Width="32" Height="32"
+                        Padding="0"
+                        Classes="toolbar-btn"
+                        Name="ReadModeButton">
+                    <TextBlock Text="👁" FontSize="14"/>
+                </Button>
+                <Button Command="{Binding ToggleThemeCommand}"
+                        ToolTip.Tip="Toggle Theme (Ctrl+Shift+T)"
+                        Width="32" Height="32"
+                        Padding="0"
+                        Classes="toolbar-btn"
+                        Name="ThemeButton">
+                    <TextBlock Text="{Binding IsDarkTheme, Converter={x:Static views:MainWindow.ThemeIconConverter}}" FontSize="14"/>
+                </Button>
+            </StackPanel>
+        </Border>
+
+        <!-- Tabs: one Editor/Preview per document -->
+        <TabControl x:Name="MainTabs" ItemsSource="{Binding Documents}" SelectedItem="{Binding ActiveDocument}" Name="TabControl">
             <TabControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:DocumentViewModel">
-                    <TextBlock Text="{Binding Title}"/>
+                    <Grid ColumnDefinitions="Auto,Auto" Margin="0" Background="Transparent">
+                        <TextBlock Text="{Binding Title}"
+                                   VerticalAlignment="Center"
+                                   Margin="8,0,4,0"/>
+                        <Button Grid.Column="1"
+                                Command="{Binding $parent[Window].DataContext.CloseDocumentCommand}"
+                                CommandParameter="{Binding}"
+                                Width="16" Height="16"
+                                Padding="0"
+                                Margin="4,0,4,0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                ToolTip.Tip="Close">
+                            <TextBlock Text="✕" FontSize="10" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Button>
+                    </Grid>
                 </DataTemplate>
             </TabControl.ItemTemplate>
             <TabControl.ContentTemplate>
@@ -75,20 +149,30 @@
 
         <!-- Drag & Drop overlay -->
         <Border x:Name="DropOverlay"
-                Background="#80000000"
-                IsVisible="False">
-            <Border BorderBrush="#FFFFFFFF"
-                    BorderThickness="2"
-                    CornerRadius="8"
-                    Margin="40">
-                <Grid>
-                    <TextBlock Text="Drop .md/.txt files or folders to open"
+                Background="#CC000000"
+                IsVisible="False"
+                ZIndex="1000">
+            <Border BorderBrush="#4D9DE0"
+                    BorderThickness="3"
+                    CornerRadius="12"
+                    Margin="80"
+                    Background="#1A4D9DE0">
+                <StackPanel HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           Spacing="16">
+                    <TextBlock Text="📄"
                                HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
+                               FontSize="64"/>
+                    <TextBlock Text="Drop Markdown files here"
+                               HorizontalAlignment="Center"
                                Foreground="#FFFFFF"
-                               FontSize="20"
-                               FontWeight="Bold"/>
-                </Grid>
+                               FontSize="24"
+                               FontWeight="SemiBold"/>
+                    <TextBlock Text=".md, .markdown, .txt files and folders"
+                               HorizontalAlignment="Center"
+                               Foreground="#B0B0B0"
+                               FontSize="14"/>
+                </StackPanel>
             </Border>
         </Border>
     </DockPanel>

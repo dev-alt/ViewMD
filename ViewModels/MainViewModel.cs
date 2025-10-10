@@ -258,4 +258,33 @@ public partial class MainViewModel : ViewModelBase
         if (ActiveDocument == null) return;
         ActiveDocument.IsReadMode = !ActiveDocument.IsReadMode;
     }
+
+    [RelayCommand]
+    private void CloseDocument(DocumentViewModel? document)
+    {
+        if (document == null) return;
+
+        // TODO: Show confirmation dialog if dirty
+        if (document.IsDirty)
+        {
+            // For now, just close it
+        }
+
+        Documents.Remove(document);
+
+        // If we closed the active document, select another one
+        if (ActiveDocument == document)
+        {
+            ActiveDocument = Documents.Count > 0 ? Documents[^1] : null;
+            SyncTopLevelWithActive();
+        }
+
+        // If no documents remain, create a new one
+        if (Documents.Count == 0)
+        {
+            _ = NewFileAsync();
+        }
+
+        StatusText = "Document closed";
+    }
 }
