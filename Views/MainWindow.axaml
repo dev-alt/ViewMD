@@ -10,150 +10,154 @@
         Icon="/Assets/avalonia-logo.ico"
         Title="{Binding WindowTitle}"
         Width="1200" Height="700"
-        DragDrop.AllowDrop="True">
+        DragDrop.AllowDrop="True"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome"
+        ExtendClientAreaTitleBarHeightHint="32">
 
     <Design.DataContext>
         <vm:MainViewModel/>
     </Design.DataContext>
-    
-    <DockPanel>
-        <!-- Menu Bar -->
-        <Menu DockPanel.Dock="Top">
-            <MenuItem Header="_File">
-                <MenuItem Header="_New" Command="{Binding NewFileCommand}" InputGesture="Ctrl+N"/>
-                <MenuItem Header="_Open..." Command="{Binding OpenFileCommand}" InputGesture="Ctrl+O"/>
-                <MenuItem Header="_Save" Command="{Binding SaveFileCommand}" InputGesture="Ctrl+S"/>
-                <MenuItem Header="Save _As..." Command="{Binding SaveFileAsCommand}" InputGesture="Ctrl+Shift+S"/>
-                <Separator/>
-                <MenuItem Header="_Export HTML..." Command="{Binding ExportHtmlCommand}"/>
-                <Separator/>
-                <MenuItem Header="E_xit" Command="{Binding ExitCommand}" InputGesture="Alt+F4"/>
-            </MenuItem>
-            <MenuItem Header="_Edit">
-                <MenuItem Header="_Bold" Command="{Binding ActiveDocument.EditorViewModel.InsertBoldCommand}" InputGesture="Ctrl+B"/>
-                <MenuItem Header="_Italic" Command="{Binding ActiveDocument.EditorViewModel.InsertItalicCommand}" InputGesture="Ctrl+I"/>
-                <MenuItem Header="_Link" Command="{Binding ActiveDocument.EditorViewModel.InsertLinkCommand}" InputGesture="Ctrl+K"/>
-                <MenuItem Header="I_mage" Command="{Binding ActiveDocument.EditorViewModel.InsertImageCommand}" InputGesture="Ctrl+Shift+I"/>
-                <MenuItem Header="_Code Block" Command="{Binding ActiveDocument.EditorViewModel.InsertCodeBlockCommand}" InputGesture="Ctrl+Shift+C"/>
-                <MenuItem Header="_Table" Command="{Binding ActiveDocument.EditorViewModel.InsertTableCommand}" InputGesture="Ctrl+T"/>
-            </MenuItem>
-            <MenuItem Header="_View">
-                <MenuItem Header="Zoom _In" Command="{Binding ActiveDocument.PreviewViewModel.ZoomInCommand}" InputGesture="Ctrl+OemPlus"/>
-                <MenuItem Header="Zoom _Out" Command="{Binding ActiveDocument.PreviewViewModel.ZoomOutCommand}" InputGesture="Ctrl+OemMinus"/>
-                <MenuItem Header="_Reset Zoom" Command="{Binding ActiveDocument.PreviewViewModel.ResetZoomCommand}" InputGesture="Ctrl+D0"/>
-                <Separator/>
-                <MenuItem Header="_Toggle Read Mode" Command="{Binding ToggleReadModeCommand}" InputGesture="F6"/>
-            </MenuItem>
-        </Menu>
 
-        <!-- Status Bar with Glass Effect -->
-        <Border DockPanel.Dock="Bottom"
-                Background="#E5FFFFFF"
-                Padding="12,6"
-                Name="StatusBar"
-                BorderBrush="#D0FFFFFF"
-                BorderThickness="0,1,0,0"
-                CornerRadius="0">
-            <Border.Effect>
-                <DropShadowEffect Color="#20000000" OffsetX="0" OffsetY="-2" BlurRadius="8"/>
-            </Border.Effect>
-            <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center" Name="StatusText" FontSize="12" Opacity="0.8"/>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="20">
-                    <TextBlock Text="{Binding ActiveDocument.EditorViewModel.State.WordCount, StringFormat='Words: {0}'}" VerticalAlignment="Center" FontSize="12" Opacity="0.8"/>
-                    <TextBlock Text="{Binding ActiveDocument.EditorViewModel.State.CharCount, StringFormat='Characters: {0}'}" VerticalAlignment="Center" FontSize="12" Opacity="0.8"/>
+    <DockPanel>
+        <!-- Compact Title Bar & Menu -->
+        <Border DockPanel.Dock="Top" Background="#FCFCFC" Padding="0" Height="32">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <!-- App Icon & Title -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" Margin="12,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="📝" FontSize="16" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding WindowTitle}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#2C3E50"/>
                 </StackPanel>
+
+                <!-- Compact Menu Bar -->
+                <Menu Grid.Column="1" Background="Transparent" VerticalAlignment="Center" Margin="20,0,0,0">
+                    <MenuItem Header="File" Padding="8,4" FontSize="12">
+                        <MenuItem Header="New" Command="{Binding NewFileCommand}" InputGesture="Ctrl+N"/>
+                        <MenuItem Header="Open..." Command="{Binding OpenFileCommand}" InputGesture="Ctrl+O"/>
+                        <MenuItem Header="Save" Command="{Binding SaveFileCommand}" InputGesture="Ctrl+S"/>
+                        <MenuItem Header="Save As..." Command="{Binding SaveFileAsCommand}" InputGesture="Ctrl+Shift+S"/>
+                        <Separator/>
+                        <MenuItem Header="Export HTML..." Command="{Binding ExportHtmlCommand}"/>
+                        <Separator/>
+                        <MenuItem Header="Exit" Command="{Binding ExitCommand}" InputGesture="Alt+F4"/>
+                    </MenuItem>
+                    <MenuItem Header="Edit" Padding="8,4" FontSize="12">
+                        <MenuItem Header="Bold" Command="{Binding ActiveDocument.EditorViewModel.InsertBoldCommand}" InputGesture="Ctrl+B"/>
+                        <MenuItem Header="Italic" Command="{Binding ActiveDocument.EditorViewModel.InsertItalicCommand}" InputGesture="Ctrl+I"/>
+                        <MenuItem Header="Link" Command="{Binding ActiveDocument.EditorViewModel.InsertLinkCommand}" InputGesture="Ctrl+K"/>
+                        <MenuItem Header="Image" Command="{Binding ActiveDocument.EditorViewModel.InsertImageCommand}" InputGesture="Ctrl+Shift+I"/>
+                        <MenuItem Header="Code Block" Command="{Binding ActiveDocument.EditorViewModel.InsertCodeBlockCommand}" InputGesture="Ctrl+Shift+C"/>
+                        <MenuItem Header="Table" Command="{Binding ActiveDocument.EditorViewModel.InsertTableCommand}" InputGesture="Ctrl+T"/>
+                    </MenuItem>
+                    <MenuItem Header="View" Padding="8,4" FontSize="12">
+                        <MenuItem Header="Toggle Read Mode" Command="{Binding ToggleReadModeCommand}" InputGesture="F6"/>
+                    </MenuItem>
+                </Menu>
             </Grid>
         </Border>
 
-        <!-- Toolbar with Glass Effect -->
+        <!-- Tabs Below Menu -->
+        <Border DockPanel.Dock="Top" Background="#F8F9FA" BorderBrush="#E0E0E0" BorderThickness="0,1,0,1" Padding="8,4">
+            <TabControl x:Name="MainTabs" ItemsSource="{Binding Documents}" SelectedItem="{Binding ActiveDocument}" Name="TabControl" Background="Transparent" Padding="0">
+                <TabControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:DocumentViewModel">
+                        <Grid ColumnDefinitions="Auto,Auto" Margin="0" Background="Transparent">
+                            <TextBlock Text="{Binding Title}"
+                                       VerticalAlignment="Center"
+                                       FontSize="11"
+                                       Margin="6,0,4,0"/>
+                            <Button Grid.Column="1"
+                                    Command="{Binding DataContext.CloseDocumentCommand, ElementName=MainTabs}"
+                                    CommandParameter="{Binding}"
+                                    Width="14" Height="14"
+                                    Padding="0"
+                                    Margin="2,0,2,0"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    ToolTip.Tip="Close"
+                                    CornerRadius="3">
+                                <TextBlock Text="✕" FontSize="9" VerticalAlignment="Center" HorizontalAlignment="Center" Opacity="0.6"/>
+                            </Button>
+                        </Grid>
+                    </DataTemplate>
+                </TabControl.ItemTemplate>
+            </TabControl>
+        </Border>
+
+        <!-- Compact Toolbar Below Tabs - Only in Edit Mode -->
         <Border DockPanel.Dock="Top"
                 Name="ToolbarBorder"
-                Padding="10,8"
-                Background="#E8FFFFFF"
-                BorderBrush="#D0FFFFFF"
+                Padding="8,4"
+                Background="#FAFBFC"
+                BorderBrush="#E0E0E0"
                 BorderThickness="0,0,0,1"
-                CornerRadius="0">
-            <Border.Effect>
-                <DropShadowEffect Color="#25000000" OffsetX="0" OffsetY="2" BlurRadius="10"/>
-            </Border.Effect>
-            <StackPanel Orientation="Horizontal" Spacing="6">
+                IsVisible="{Binding !ActiveDocument.IsReadMode}">
+            <StackPanel Orientation="Horizontal" Spacing="2" HorizontalAlignment="Left">
                 <!-- Formatting Tools -->
                 <Button Command="{Binding ActiveDocument.EditorViewModel.InsertBoldCommand}"
                         ToolTip.Tip="Bold (Ctrl+B)"
-                        Width="32" Height="32"
-                        Padding="0"
-                        Classes="toolbar-btn"
-                        Name="BoldButton">
-                    <TextBlock Text="B" FontWeight="Bold" FontSize="14"/>
+                        Width="26" Height="26"
+                        Classes="toolbar-btn">
+                    <TextBlock Text="B" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                 </Button>
                 <Button Command="{Binding ActiveDocument.EditorViewModel.InsertItalicCommand}"
                         ToolTip.Tip="Italic (Ctrl+I)"
-                        Width="32" Height="32"
-                        Padding="0"
-                        Classes="toolbar-btn"
-                        Name="ItalicButton">
-                    <TextBlock Text="I" FontStyle="Italic" FontSize="14"/>
+                        Width="26" Height="26"
+                        Classes="toolbar-btn">
+                    <TextBlock Text="I" FontStyle="Italic" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                 </Button>
                 <Button Command="{Binding ActiveDocument.EditorViewModel.InsertLinkCommand}"
                         ToolTip.Tip="Insert Link (Ctrl+K)"
-                        Width="32" Height="32"
-                        Padding="0"
-                        Classes="toolbar-btn"
-                        Name="LinkButton">
-                    <TextBlock Text="🔗" FontSize="14"/>
+                        Width="26" Height="26"
+                        Classes="toolbar-btn">
+                    <TextBlock Text="🔗" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                 </Button>
                 <Button Command="{Binding ActiveDocument.EditorViewModel.InsertCodeBlockCommand}"
                         ToolTip.Tip="Code Block (Ctrl+Shift+C)"
-                        Width="32" Height="32"
-                        Padding="0"
-                        Classes="toolbar-btn"
-                        Name="CodeButton">
-                    <TextBlock Text="&lt;/&gt;" FontSize="12" FontFamily="Consolas"/>
+                        Width="26" Height="26"
+                        Classes="toolbar-btn">
+                    <TextBlock Text="&lt;/&gt;" FontSize="10" FontFamily="Consolas" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                 </Button>
 
-                <Separator Width="1" Height="24" Margin="4,0"/>
+                <Separator Width="1" Height="18" Margin="4,0"/>
 
-                <!-- View Tools -->
                 <Button Command="{Binding ToggleReadModeCommand}"
                         ToolTip.Tip="Toggle Read Mode (F6)"
-                        Width="32" Height="32"
-                        Padding="0"
-                        Classes="toolbar-btn"
-                        Name="ReadModeButton">
-                    <TextBlock Text="👁" FontSize="14"/>
+                        Width="26" Height="26"
+                        Classes="toolbar-btn">
+                    <TextBlock Text="👁" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                 </Button>
             </StackPanel>
         </Border>
 
-        <!-- Tabs: one Editor/Preview per document -->
-        <TabControl x:Name="MainTabs" ItemsSource="{Binding Documents}" SelectedItem="{Binding ActiveDocument}" Name="TabControl">
-            <TabControl.ItemTemplate>
-                <DataTemplate x:DataType="vm:DocumentViewModel">
-                    <Grid ColumnDefinitions="Auto,Auto" Margin="0" Background="Transparent">
-                        <TextBlock Text="{Binding Title}"
-                                   VerticalAlignment="Center"
-                                   Margin="8,0,4,0"/>
-                        <Button Grid.Column="1"
-                                Command="{Binding DataContext.CloseDocumentCommand, ElementName=MainTabs}"
-                                CommandParameter="{Binding}"
-                                Width="16" Height="16"
-                                Padding="0"
-                                Margin="4,0,4,0"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                ToolTip.Tip="Close">
-                            <TextBlock Text="✕" FontSize="10" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                        </Button>
-                    </Grid>
-                </DataTemplate>
-            </TabControl.ItemTemplate>
-            <TabControl.ContentTemplate>
+        <!-- Status Bar - Only visible in Edit Mode -->
+        <Border DockPanel.Dock="Bottom"
+                Background="#E5FFFFFF"
+                Padding="10,5"
+                Name="StatusBar"
+                BorderBrush="#D0FFFFFF"
+                BorderThickness="0,1,0,0"
+                IsVisible="{Binding !ActiveDocument.IsReadMode}">
+            <Border.Effect>
+                <DropShadowEffect Color="#20000000" OffsetX="0" OffsetY="-2" BlurRadius="8"/>
+            </Border.Effect>
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center" Name="StatusText" FontSize="11" Opacity="0.8"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16">
+                    <TextBlock Text="{Binding ActiveDocument.EditorViewModel.State.WordCount, StringFormat='Words: {0}'}" VerticalAlignment="Center" FontSize="11" Opacity="0.8"/>
+                    <TextBlock Text="{Binding ActiveDocument.EditorViewModel.State.CharCount, StringFormat='Characters: {0}'}" VerticalAlignment="Center" FontSize="11" Opacity="0.8"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Content Area -->
+        <ContentControl Content="{Binding ActiveDocument}" DockPanel.Dock="Top">
+            <ContentControl.ContentTemplate>
                 <DataTemplate x:DataType="vm:DocumentViewModel">
                     <views:EditorPreviewView DataContext="{Binding}"/>
                 </DataTemplate>
-            </TabControl.ContentTemplate>
-        </TabControl>
+            </ContentControl.ContentTemplate>
+        </ContentControl>
 
         <!-- Drag & Drop overlay with Enhanced Glassmorphism -->
         <Border x:Name="DropOverlay"

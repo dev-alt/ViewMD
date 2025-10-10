@@ -24,58 +24,48 @@
         </Style>
 
         <Style Selector="Menu">
-            <Setter Property="Background" Value="#F0FFFFFF"/>
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect Color="#40000000" OffsetX="0" OffsetY="2" BlurRadius="8"/>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="FontSize" Value="12"/>
         </Style>
 
         <Style Selector="MenuItem">
             <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="8,4"/>
         </Style>
 
         <Style Selector="MenuItem:pointerover /template/ Border#PART_LayoutRoot">
-            <Setter Property="Background" Value="#E5E5E5"/>
+            <Setter Property="Background" Value="#E8F4F8"/>
         </Style>
 
         <Style Selector="MenuItem:selected /template/ Border#PART_LayoutRoot">
-            <Setter Property="Background" Value="#E0E0E0"/>
+            <Setter Property="Background" Value="#D0E9F2"/>
         </Style>
 
-        <!-- TabControl Styling with Glassmorphism -->
+        <!-- Compact TabControl Styling -->
         <Style Selector="TabControl">
-            <Setter Property="Background" Value="#FAFBFC"/>
+            <Setter Property="Background" Value="Transparent"/>
         </Style>
 
         <Style Selector="TabItem">
-            <Setter Property="Background" Value="#E0FFFFFF"/>
-            <Setter Property="Foreground" Value="#000000"/>
-            <Setter Property="BorderBrush" Value="#D0FFFFFF"/>
-            <Setter Property="BorderThickness" Value="1,1,1,0"/>
-            <Setter Property="Padding" Value="12,6"/>
-            <Setter Property="Margin" Value="0,0,2,0"/>
-            <Setter Property="CornerRadius" Value="6,6,0,0"/>
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect Color="#20000000" OffsetX="0" OffsetY="1" BlurRadius="4"/>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#5A6C7D"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0,0,0,2"/>
+            <Setter Property="Padding" Value="10,4"/>
+            <Setter Property="Margin" Value="0,0,4,0"/>
+            <Setter Property="FontSize" Value="11"/>
         </Style>
 
         <Style Selector="TabItem:pointerover">
-            <Setter Property="Background" Value="#EAFFFFFF"/>
+            <Setter Property="Background" Value="#10000000"/>
+            <Setter Property="Foreground" Value="#2C3E50"/>
         </Style>
 
         <Style Selector="TabItem:selected">
-            <Setter Property="Background" Value="#FAFFFFFF"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#2C3E50"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect Color="#30000000" OffsetX="0" OffsetY="2" BlurRadius="8"/>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="BorderBrush" Value="#4D9DE0"/>
         </Style>
 
         <!-- Button Styling with Glass Effect -->
