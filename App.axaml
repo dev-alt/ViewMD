@@ -11,13 +11,25 @@
     <Application.Styles>
         <FluentTheme />
 
-        <!-- Custom Color Scheme - Light Theme Only -->
+        <!-- Custom Color Scheme - Light Theme Only with Glassmorphism -->
         <Style Selector="Window">
-            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Color="#F8F9FA" Offset="0"/>
+                        <GradientStop Color="#E9ECEF" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style Selector="Menu">
-            <Setter Property="Background" Value="#F9F9F9"/>
+            <Setter Property="Background" Value="#F0FFFFFF"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="#40000000" OffsetX="0" OffsetY="2" BlurRadius="8"/>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style Selector="MenuItem">
@@ -32,36 +44,53 @@
             <Setter Property="Background" Value="#E0E0E0"/>
         </Style>
 
-        <!-- TabControl Styling -->
+        <!-- TabControl Styling with Glassmorphism -->
         <Style Selector="TabControl">
-            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="Background" Value="#FAFBFC"/>
         </Style>
 
         <Style Selector="TabItem">
-            <Setter Property="Background" Value="#F0F0F0"/>
+            <Setter Property="Background" Value="#E0FFFFFF"/>
             <Setter Property="Foreground" Value="#000000"/>
-            <Setter Property="BorderBrush" Value="#E0E0E0"/>
+            <Setter Property="BorderBrush" Value="#D0FFFFFF"/>
             <Setter Property="BorderThickness" Value="1,1,1,0"/>
             <Setter Property="Padding" Value="12,6"/>
             <Setter Property="Margin" Value="0,0,2,0"/>
+            <Setter Property="CornerRadius" Value="6,6,0,0"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="#20000000" OffsetX="0" OffsetY="1" BlurRadius="4"/>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style Selector="TabItem:pointerover">
-            <Setter Property="Background" Value="#E8E8E8"/>
+            <Setter Property="Background" Value="#EAFFFFFF"/>
         </Style>
 
         <Style Selector="TabItem:selected">
-            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="Background" Value="#FAFFFFFF"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="#30000000" OffsetX="0" OffsetY="2" BlurRadius="8"/>
+                </Setter.Value>
+            </Setter>
         </Style>
 
-        <!-- Button Styling -->
+        <!-- Button Styling with Glass Effect -->
         <Style Selector="Button">
-            <Setter Property="Background" Value="#F0F0F0"/>
+            <Setter Property="Background" Value="#DDFFFFFF"/>
             <Setter Property="Foreground" Value="#000000"/>
-            <Setter Property="BorderBrush" Value="#D0D0D0"/>
+            <Setter Property="BorderBrush" Value="#C0FFFFFF"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="#15000000" OffsetX="0" OffsetY="1" BlurRadius="3"/>
+                </Setter.Value>
+            </Setter>
             <Setter Property="Transitions">
                 <Transitions>
                     <BrushTransition Property="Background" Duration="0:0:0.15"/>
@@ -71,42 +100,63 @@
         </Style>
 
         <Style Selector="Button:pointerover">
-            <Setter Property="Background" Value="#E0E0E0"/>
-            <Setter Property="BorderBrush" Value="#C0C0C0"/>
+            <Setter Property="Background" Value="#EAFFFFFF"/>
+            <Setter Property="BorderBrush" Value="#D0FFFFFF"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="#25000000" OffsetX="0" OffsetY="2" BlurRadius="6"/>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style Selector="Button:pressed">
-            <Setter Property="Background" Value="#D0D0D0"/>
+            <Setter Property="Background" Value="#D0FFFFFF"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="#10000000" OffsetX="0" OffsetY="1" BlurRadius="2"/>
+                </Setter.Value>
+            </Setter>
         </Style>
 
-        <!-- Toolbar button hover effects -->
+        <!-- Toolbar button glass effects -->
         <Style Selector="Button.toolbar-btn">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="CornerRadius" Value="6"/>
         </Style>
 
         <Style Selector="Button.toolbar-btn:pointerover">
-            <Setter Property="Background" Value="#E0E0E0"/>
-            <Setter Property="BorderBrush" Value="#D0D0D0"/>
+            <Setter Property="Background" Value="#50FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#60FFFFFF"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="#20000000" OffsetX="0" OffsetY="1" BlurRadius="4"/>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style Selector="Button.toolbar-btn:pressed">
-            <Setter Property="Background" Value="#D0D0D0"/>
+            <Setter Property="Background" Value="#40FFFFFF"/>
         </Style>
 
-        <!-- TextBox Styling -->
+        <!-- TextBox Styling with Glass -->
         <Style Selector="TextBox">
-            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="Background" Value="#F5FFFFFF"/>
             <Setter Property="Foreground" Value="#000000"/>
-            <Setter Property="BorderBrush" Value="#E0E0E0"/>
+            <Setter Property="BorderBrush" Value="#D0FFFFFF"/>
             <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="4"/>
         </Style>
 
         <Style Selector="TextBox:focus">
             <Setter Property="BorderBrush" Value="#4D9DE0"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="#304D9DE0" OffsetX="0" OffsetY="0" BlurRadius="8"/>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <!-- Border Styling -->

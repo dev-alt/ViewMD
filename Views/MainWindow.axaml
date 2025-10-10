@@ -46,20 +46,38 @@
             </MenuItem>
         </Menu>
 
-        <!-- Status Bar -->
-        <Border DockPanel.Dock="Bottom" Background="#F0F0F0" Padding="8,4" Name="StatusBar">
+        <!-- Status Bar with Glass Effect -->
+        <Border DockPanel.Dock="Bottom"
+                Background="#E5FFFFFF"
+                Padding="12,6"
+                Name="StatusBar"
+                BorderBrush="#D0FFFFFF"
+                BorderThickness="0,1,0,0"
+                CornerRadius="0">
+            <Border.Effect>
+                <DropShadowEffect Color="#20000000" OffsetX="0" OffsetY="-2" BlurRadius="8"/>
+            </Border.Effect>
             <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center" Name="StatusText"/>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="15">
-                    <TextBlock Text="{Binding ActiveDocument.EditorViewModel.State.WordCount, StringFormat='Words: {0}'}" VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding ActiveDocument.EditorViewModel.State.CharCount, StringFormat='Characters: {0}'}" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center" Name="StatusText" FontSize="12" Opacity="0.8"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="20">
+                    <TextBlock Text="{Binding ActiveDocument.EditorViewModel.State.WordCount, StringFormat='Words: {0}'}" VerticalAlignment="Center" FontSize="12" Opacity="0.8"/>
+                    <TextBlock Text="{Binding ActiveDocument.EditorViewModel.State.CharCount, StringFormat='Characters: {0}'}" VerticalAlignment="Center" FontSize="12" Opacity="0.8"/>
                 </StackPanel>
             </Grid>
         </Border>
 
-        <!-- Toolbar -->
-        <Border DockPanel.Dock="Top" Name="ToolbarBorder" Padding="8,6">
-            <StackPanel Orientation="Horizontal" Spacing="4">
+        <!-- Toolbar with Glass Effect -->
+        <Border DockPanel.Dock="Top"
+                Name="ToolbarBorder"
+                Padding="10,8"
+                Background="#E8FFFFFF"
+                BorderBrush="#D0FFFFFF"
+                BorderThickness="0,0,0,1"
+                CornerRadius="0">
+            <Border.Effect>
+                <DropShadowEffect Color="#25000000" OffsetX="0" OffsetY="2" BlurRadius="10"/>
+            </Border.Effect>
+            <StackPanel Orientation="Horizontal" Spacing="6">
                 <!-- Formatting Tools -->
                 <Button Command="{Binding ActiveDocument.EditorViewModel.InsertBoldCommand}"
                         ToolTip.Tip="Bold (Ctrl+B)"
@@ -137,32 +155,44 @@
             </TabControl.ContentTemplate>
         </TabControl>
 
-        <!-- Drag & Drop overlay -->
+        <!-- Drag & Drop overlay with Enhanced Glassmorphism -->
         <Border x:Name="DropOverlay"
-                Background="#CC000000"
+                Background="#B0000000"
                 IsVisible="False"
                 ZIndex="1000">
-            <Border BorderBrush="#4D9DE0"
-                    BorderThickness="3"
-                    CornerRadius="12"
-                    Margin="80"
-                    Background="#1A4D9DE0">
-                <StackPanel HorizontalAlignment="Center"
-                           VerticalAlignment="Center"
-                           Spacing="16">
-                    <TextBlock Text="📄"
-                               HorizontalAlignment="Center"
-                               FontSize="64"/>
-                    <TextBlock Text="Drop Markdown files here"
-                               HorizontalAlignment="Center"
-                               Foreground="#FFFFFF"
-                               FontSize="24"
-                               FontWeight="SemiBold"/>
-                    <TextBlock Text=".md, .markdown, .txt files and folders"
-                               HorizontalAlignment="Center"
-                               Foreground="#B0B0B0"
-                               FontSize="14"/>
-                </StackPanel>
+            <Border BorderBrush="#80FFFFFF"
+                    BorderThickness="2"
+                    CornerRadius="16"
+                    Margin="100"
+                    Background="#C0FFFFFF">
+                <Border.Effect>
+                    <DropShadowEffect Color="#60000000" OffsetX="0" OffsetY="8" BlurRadius="32"/>
+                </Border.Effect>
+                <Border BorderBrush="#40FFFFFF"
+                        BorderThickness="1"
+                        CornerRadius="15"
+                        Margin="2">
+                    <StackPanel HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Spacing="20"
+                               Margin="40">
+                        <TextBlock Text="📄"
+                                   HorizontalAlignment="Center"
+                                   FontSize="72"
+                                   Opacity="0.9"/>
+                        <TextBlock Text="Drop Markdown files here"
+                                   HorizontalAlignment="Center"
+                                   Foreground="#2C3E50"
+                                   FontSize="28"
+                                   FontWeight="SemiBold"
+                                   Opacity="0.95"/>
+                        <TextBlock Text=".md, .markdown, .txt files and folders"
+                                   HorizontalAlignment="Center"
+                                   Foreground="#5A6C7D"
+                                   FontSize="16"
+                                   Opacity="0.85"/>
+                    </StackPanel>
+                </Border>
             </Border>
         </Border>
     </DockPanel>

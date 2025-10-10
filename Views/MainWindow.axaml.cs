@@ -17,14 +17,9 @@ namespace MarkdownViewer.Views;
 
 public partial class MainWindow : Window
 {
-    private Border? _statusBar;
-    private Border? _toolbarBorder;
-
     public MainWindow()
     {
         InitializeComponent();
-        _statusBar = this.FindControl<Border>("StatusBar");
-        _toolbarBorder = this.FindControl<Border>("ToolbarBorder");
         SetupViewModel();
 
         // Drag-and-drop support
@@ -50,32 +45,6 @@ public partial class MainWindow : Window
         {
             viewModel.ShowOpenFileDialogAsync = ShowOpenFileDialogAsync;
             viewModel.ShowSaveFileDialogAsync = ShowSaveFileDialogAsync;
-
-            // Apply light theme styling
-            ApplyLightTheme();
-        }
-    }
-
-    private void ApplyLightTheme()
-    {
-        if (_statusBar != null)
-        {
-            _statusBar.Background = new SolidColorBrush(Color.Parse("#F0F0F0"));
-            foreach (var child in _statusBar.GetVisualDescendants())
-            {
-                if (child is TextBlock tb)
-                {
-                    tb.Foreground = Brushes.Black;
-                }
-            }
-        }
-
-        // Apply toolbar theme
-        if (_toolbarBorder != null)
-        {
-            _toolbarBorder.Background = new SolidColorBrush(Color.Parse("#F3F3F3"));
-            _toolbarBorder.BorderBrush = new SolidColorBrush(Color.Parse("#E0E0E0"));
-            _toolbarBorder.BorderThickness = new Thickness(0, 0, 0, 1);
         }
     }
 
