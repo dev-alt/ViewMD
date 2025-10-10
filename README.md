@@ -168,8 +168,6 @@ dotnet publish -c Release -r osx-x64 --self-contained
 
 3. **Image Handling**: Images must be accessible via file path or URL.
 
-4. **Collaborative Editing**: Not supported (single-user application).
-
 ## Future Enhancements
 
 - [ ] Full WebView integration for rich preview
