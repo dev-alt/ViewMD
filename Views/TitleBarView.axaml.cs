@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 
@@ -9,6 +10,12 @@ public partial class TitleBarView : UserControl
     {
         InitializeComponent();
 
+        // Wire up event handlers after the control is added to the visual tree
+        AttachedToVisualTree += OnAttachedToVisualTree;
+    }
+
+    private void OnAttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
+    {
         // Enable title bar dragging
         var titleBar = this.FindControl<Border>("TitleBar");
         if (titleBar != null)
