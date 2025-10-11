@@ -11,7 +11,7 @@ public record AppSettings
     public bool SyncScroll { get; init; } = true;
     public string FontFamily { get; init; } = "Consolas";
     public int FontSize { get; init; } = 14;
-    public List<string> RecentFiles { get; init; } = new();
+    public List<string> RecentFiles { get; init; } = [];
     public string LastOpenPath { get; init; } = string.Empty;
     public double SplitterPosition { get; init; } = 0.5;
 }

@@ -10,18 +10,12 @@ using MarkdownViewer.Services;
 
 namespace MarkdownViewer.ViewModels;
 
-public partial class TitleBarViewModel : ViewModelBase
+public partial class TitleBarViewModel(MainViewModel mainVM) : ViewModelBase
 {
-    private readonly MainViewModel _mainVM;
-
-    public TitleBarViewModel(MainViewModel mainVM)
-    {
-        _mainVM = mainVM;
-    }
-
+    private readonly MainViewModel _mainVM = mainVM;
     [ObservableProperty] private string _windowTitle = "ViewMD";
 
-    [ObservableProperty] private ObservableCollection<string> _recentFiles = new();
+    [ObservableProperty] private ObservableCollection<string> _recentFiles = [];
 
     [RelayCommand]
     internal async Task NewFile()
@@ -31,7 +25,7 @@ public partial class TitleBarViewModel : ViewModelBase
             // TODO: Show confirmation dialog
         }
 
-        var docVm = _mainVM.CreateDocumentViewModel();
+        var docVm = MainViewModel.CreateDocumentViewModel();
         var doc = await _mainVM.FileService.CreateNewDocumentAsync();
         docVm.ApplyDocument(doc);
         _mainVM.Documents.Add(docVm);
@@ -59,7 +53,7 @@ public partial class TitleBarViewModel : ViewModelBase
             _mainVM.RecentFilesService.AddRecentFile(result);
             _mainVM.LoadRecentFiles();
 
-            var docVm = _mainVM.CreateDocumentViewModel();
+            var docVm = MainViewModel.CreateDocumentViewModel();
             docVm.ApplyDocument(document);
             _mainVM.Documents.Add(docVm);
             _mainVM.ActiveDocument = docVm;
@@ -157,7 +151,7 @@ public partial class TitleBarViewModel : ViewModelBase
     [RelayCommand]
     private void CloseActiveTab()
     {
-        _mainVM.CloseDocument(_mainVM.ActiveDocument);
+        using var _ = _mainVM.CloseDocument(_mainVM.ActiveDocument);
     }
 
     [RelayCommand]

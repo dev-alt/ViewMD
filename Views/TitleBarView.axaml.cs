@@ -18,33 +18,32 @@ public partial class TitleBarView : UserControl
 
         // Window control buttons
         var minimizeButton = this.FindControl<Button>("MinimizeButton");
-        if (minimizeButton != null)
+        if (minimizeButton != null && this.VisualRoot is Window window)
         {
-            minimizeButton.Click += (_, _) => ((Window)this.VisualRoot).WindowState = WindowState.Minimized;
+            minimizeButton.Click += (_, _) => window.WindowState = WindowState.Minimized;
         }
 
         var maximizeButton = this.FindControl<Button>("MaximizeButton");
-        if (maximizeButton != null)
+        if (maximizeButton != null && this.VisualRoot is Window windowMax)
         {
             maximizeButton.Click += (_, _) =>
             {
-                var window = (Window)this.VisualRoot;
-                window.WindowState = window.WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+                windowMax.WindowState = windowMax.WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
             };
         }
 
         var closeButton = this.FindControl<Button>("CloseButton");
-        if (closeButton != null)
+        if (closeButton != null && this.VisualRoot is Window windowClose)
         {
-            closeButton.Click += (_, _) => ((Window)this.VisualRoot).Close();
+            closeButton.Click += (_, _) => windowClose.Close();
         }
     }
 
     private void TitleBar_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed && this.VisualRoot is Window window)
         {
-            ((Window)this.VisualRoot).BeginMoveDrag(e);
+            window.BeginMoveDrag(e);
         }
     }
 }

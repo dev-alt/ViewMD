@@ -8,7 +8,7 @@ namespace MarkdownViewer.Services;
 
 public class RecentFilesService : IRecentFilesService
 {
-    private readonly List<string> _recentFiles = new();
+    private readonly List<string> _recentFiles = [];
     private readonly string _recentFilesPath;
     private const int MaxRecentFiles = 10;
 

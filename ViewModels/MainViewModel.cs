@@ -18,7 +18,7 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private string _statusText = "Ready";
     [ObservableProperty] private bool _isDirty = false;
 
-    [ObservableProperty] private System.Collections.ObjectModel.ObservableCollection<DocumentViewModel> _documents = new();
+    [ObservableProperty] private System.Collections.ObjectModel.ObservableCollection<DocumentViewModel> _documents = [];
     [ObservableProperty] private DocumentViewModel? _activeDocument;
     [ObservableProperty] private TitleBarViewModel _titleBarVM;
 
@@ -42,8 +42,9 @@ public partial class MainViewModel : ViewModelBase
         _fileService = null!;
         _exportService = null!;
         _recentFilesService = null!;
+        TitleBarVM = new TitleBarViewModel(this);
     }
-    
+
     public MainViewModel(
         IFileService fileService,
         IExportService exportService,
@@ -62,9 +63,10 @@ public partial class MainViewModel : ViewModelBase
 
         // Load recent files
         LoadRecentFiles();
+        NewFile();
 
         // Initialize with one tab
-        _ = NewFileAsync();
+        NewFile();
     }
 
     internal void LoadRecentFiles()
@@ -109,7 +111,7 @@ public partial class MainViewModel : ViewModelBase
         }
     }
 
-    public DocumentViewModel CreateDocumentViewModel()
+    public static DocumentViewModel CreateDocumentViewModel()
     {
         // Resolve via DI to ensure services (e.g., IMarkdownService) are injected
         var sp = (Application.Current as App)?.Services;
@@ -134,9 +136,9 @@ public partial class MainViewModel : ViewModelBase
     private void UpdateWindowTitle()
     {
         var isDirty = ActiveDocument?.IsDirty == true;
-    var fileName = ActiveDocument?.Title ?? "Untitled";
-    var dirtyMarker = isDirty ? "*" : "";
-    TitleBarVM.WindowTitle = $"{fileName}{dirtyMarker} - ViewMD";
+        var fileName = ActiveDocument?.Title ?? "Untitled";
+        var dirtyMarker = isDirty ? "*" : "";
+        TitleBarVM.WindowTitle = $"{fileName}{dirtyMarker} - ViewMD";
     }
 
     [RelayCommand]
@@ -169,20 +171,20 @@ public partial class MainViewModel : ViewModelBase
     }
 
     // Add this method to MainViewModel
-public async Task NewFileAsync()
-{
-    var docVm = CreateDocumentViewModel();
-    docVm.ApplyDocument(new MarkdownDocument());
-    Documents.Add(docVm);
-    ActiveDocument = docVm;
-    SyncTopLevelWithActive();
-    StatusText = "New file created";
-}
+    public void NewFile()
+    {
+        var docVm = CreateDocumentViewModel();
+        docVm.ApplyDocument(new MarkdownDocument());
+        Documents.Add(docVm);
+        ActiveDocument = docVm;
+        SyncTopLevelWithActive();
+        StatusText = "New file created";
+    }
 
-[RelayCommand]
-private void ToggleReadMode()
-{
-    if (ActiveDocument == null) return;
-    ActiveDocument.IsReadMode = !ActiveDocument.IsReadMode;
-}
+    [RelayCommand]
+    private void ToggleReadMode()
+    {
+        if (ActiveDocument == null) return;
+        ActiveDocument.IsReadMode = !ActiveDocument.IsReadMode;
+    }
 }

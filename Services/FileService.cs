@@ -8,7 +8,7 @@ namespace MarkdownViewer.Services;
 
 public class FileService : IFileService
 {
-    private readonly List<string> _recentFiles = new();
+    private readonly List<string> _recentFiles = [];
     private const int MaxRecentFiles = 10;
 
     public async Task<MarkdownDocument?> OpenFileAsync(string? path = null)
