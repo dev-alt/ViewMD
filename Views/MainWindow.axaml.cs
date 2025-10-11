@@ -15,9 +15,14 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        Console.WriteLine("DEBUG: MainWindow constructor - InitializeComponent done");
 
         // Set up ViewModel after window is opened to ensure DataContext is set
-        this.Opened += (sender, e) => SetupViewModel();
+        this.Opened += (sender, e) =>
+        {
+            Console.WriteLine("DEBUG: Window.Opened event fired");
+            SetupViewModel();
+        };
 
         // Drag-and-drop support
         this.AddHandler(DragDrop.DragEnterEvent, OnDragOver);
@@ -34,14 +39,27 @@ public partial class MainWindow : Window
             tabs.AddHandler(DragDrop.DragOverEvent, OnDragOver);
             tabs.AddHandler(DragDrop.DropEvent, OnDrop);
         }
+
+        Console.WriteLine("DEBUG: MainWindow constructor - complete");
     }
 
     private void SetupViewModel()
     {
+        Console.WriteLine($"DEBUG: SetupViewModel called, DataContext is null: {DataContext == null}");
+
         if (DataContext is MainViewModel viewModel)
         {
+            Console.WriteLine("DEBUG: DataContext is MainViewModel, setting up delegates");
             viewModel.ShowOpenFileDialogAsync = ShowOpenFileDialogAsync;
             viewModel.ShowSaveFileDialogAsync = ShowSaveFileDialogAsync;
+            Console.WriteLine($"DEBUG: Delegates set - ShowOpenFileDialogAsync is null: {viewModel.ShowOpenFileDialogAsync == null}");
+
+            // Update status to confirm setup
+            viewModel.StatusText = "DEBUG: Window initialized and dialogs configured";
+        }
+        else
+        {
+            Console.WriteLine($"DEBUG: DataContext is NOT MainViewModel! Type: {DataContext?.GetType().Name ?? "null"}");
         }
     }
 

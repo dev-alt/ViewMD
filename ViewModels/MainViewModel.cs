@@ -172,6 +172,9 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     public void NewFile()
     {
+        Console.WriteLine("DEBUG: NewFile command invoked");
+        StatusText = "DEBUG: NewFile command invoked";
+
         if (IsDirty)
         {
             // TODO: Show confirmation dialog
@@ -183,20 +186,39 @@ public partial class MainViewModel : ViewModelBase
         ActiveDocument = docVm;
         SyncTopLevelWithActive();
         StatusText = "New file created";
+        Console.WriteLine("DEBUG: NewFile command completed");
     }
 
     [RelayCommand]
     private async Task OpenFile()
     {
+        Console.WriteLine("DEBUG: OpenFile command invoked");
+        StatusText = "DEBUG: OpenFile command invoked";
+
         if (IsDirty)
         {
             // TODO: Show confirmation dialog
         }
 
         var openDlg = ShowOpenFileDialogAsync;
-        if (openDlg is null) return;
+        Console.WriteLine($"DEBUG: ShowOpenFileDialogAsync delegate is null: {openDlg == null}");
+
+        if (openDlg is null)
+        {
+            StatusText = "ERROR: ShowOpenFileDialogAsync delegate is null!";
+            Console.WriteLine("DEBUG: ShowOpenFileDialogAsync is null, returning");
+            return;
+        }
+
+        Console.WriteLine("DEBUG: Calling ShowOpenFileDialogAsync");
         var result = await openDlg();
-        if (string.IsNullOrEmpty(result)) return;
+        Console.WriteLine($"DEBUG: Dialog result: {result ?? "null"}");
+
+        if (string.IsNullOrEmpty(result))
+        {
+            StatusText = "DEBUG: No file selected";
+            return;
+        }
 
         var document = await _fileService.OpenFileAsync(result);
         if (document != null)
@@ -210,10 +232,12 @@ public partial class MainViewModel : ViewModelBase
             ActiveDocument = docVm;
             SyncTopLevelWithActive();
             StatusText = $"Opened: {document.Title}";
+            Console.WriteLine($"DEBUG: Successfully opened: {document.Title}");
         }
         else
         {
             StatusText = "Failed to open file";
+            Console.WriteLine("DEBUG: Failed to open file");
         }
     }
 
