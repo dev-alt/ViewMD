@@ -44,11 +44,23 @@ function Find-Tool {
     return $null
 }
 
+# Ensure sensible defaults if caller didn't explicitly pass paths matching the runtime
+if (-not $PSBoundParameters.ContainsKey('PublishDir')) {
+    # e.g., publish\win-x64 when -Runtime win-x64
+    $PublishDir = Join-Path 'publish' $Runtime
+}
+if (-not $PSBoundParameters.ContainsKey('MsixPath')) {
+    # Create a runtime-specific default file name when possible
+    $suffix = ''
+    if ($Runtime) { $suffix = "-$(($Runtime -replace '^win-',''))" }
+    $MsixPath = "ViewMD$suffix.msix"
+}
+
 # 1) Generate stub icons if missing
-pwsh -ExecutionPolicy Bypass -File .\scripts\create-stub-icons.ps1 | Out-Null
+pwsh -ExecutionPolicy Bypass -File .\scripts\advanced\create-stub-icons.ps1 | Out-Null
 
 # 2) Check assets
-pwsh -ExecutionPolicy Bypass -File .\scripts\check-msix-assets.ps1
+pwsh -ExecutionPolicy Bypass -File .\scripts\advanced\check-msix-assets.ps1
 
 # 3) Publish app
 & dotnet publish -c $Configuration -r $Runtime --self-contained -o $PublishDir MarkdownViewer.csproj
