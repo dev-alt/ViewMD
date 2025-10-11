@@ -1,4 +1,5 @@
 using System;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -18,9 +19,10 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private string _statusText = "Ready";
     [ObservableProperty] private bool _isDirty = false;
 
-    [ObservableProperty] private System.Collections.ObjectModel.ObservableCollection<DocumentViewModel> _documents = [];
+    [ObservableProperty] private ObservableCollection<DocumentViewModel> _documents = [];
     [ObservableProperty] private DocumentViewModel? _activeDocument;
-    [ObservableProperty] private TitleBarViewModel _titleBarVM;
+    [ObservableProperty] private string _windowTitle = "ViewMD";
+    [ObservableProperty] private ObservableCollection<string> _recentFiles = [];
 
     private readonly IFileService _fileService;
     private readonly IExportService _exportService;
@@ -42,7 +44,6 @@ public partial class MainViewModel : ViewModelBase
         _fileService = null!;
         _exportService = null!;
         _recentFilesService = null!;
-        TitleBarVM = new TitleBarViewModel(this);
     }
 
     public MainViewModel(
@@ -59,11 +60,8 @@ public partial class MainViewModel : ViewModelBase
         _previewViewModel = previewViewModel;
         _currentDocument = new MarkdownDocument();
 
-        TitleBarVM = new TitleBarViewModel(this);
-
         // Load recent files
         LoadRecentFiles();
-        NewFile();
 
         // Initialize with one tab
         NewFile();
@@ -71,10 +69,10 @@ public partial class MainViewModel : ViewModelBase
 
     internal void LoadRecentFiles()
     {
-        TitleBarVM.RecentFiles.Clear();
+        RecentFiles.Clear();
         foreach (var file in _recentFilesService.RecentFiles)
         {
-            TitleBarVM.RecentFiles.Add(file);
+            RecentFiles.Add(file);
         }
     }
 
@@ -138,11 +136,11 @@ public partial class MainViewModel : ViewModelBase
         var isDirty = ActiveDocument?.IsDirty == true;
         var fileName = ActiveDocument?.Title ?? "Untitled";
         var dirtyMarker = isDirty ? "*" : "";
-        TitleBarVM.WindowTitle = $"{fileName}{dirtyMarker} - ViewMD";
+        WindowTitle = $"{fileName}{dirtyMarker} - ViewMD";
     }
 
     [RelayCommand]
-    public async Task CloseDocument(DocumentViewModel? document)
+    public void CloseDocument(DocumentViewModel? document)
     {
         if (document == null) return;
 
@@ -164,15 +162,21 @@ public partial class MainViewModel : ViewModelBase
         // If no documents remain, create a new one
         if (Documents.Count == 0)
         {
-            await TitleBarVM.NewFile();
+            NewFile();
         }
 
         StatusText = "Document closed";
     }
 
-    // Add this method to MainViewModel
+    // File Operations
+    [RelayCommand]
     public void NewFile()
     {
+        if (IsDirty)
+        {
+            // TODO: Show confirmation dialog
+        }
+
         var docVm = CreateDocumentViewModel();
         docVm.ApplyDocument(new MarkdownDocument());
         Documents.Add(docVm);
@@ -182,9 +186,223 @@ public partial class MainViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private async Task OpenFile()
+    {
+        if (IsDirty)
+        {
+            // TODO: Show confirmation dialog
+        }
+
+        var openDlg = ShowOpenFileDialogAsync;
+        if (openDlg is null) return;
+        var result = await openDlg();
+        if (string.IsNullOrEmpty(result)) return;
+
+        var document = await _fileService.OpenFileAsync(result);
+        if (document != null)
+        {
+            _recentFilesService.AddRecentFile(result);
+            LoadRecentFiles();
+
+            var docVm = CreateDocumentViewModel();
+            docVm.ApplyDocument(document);
+            Documents.Add(docVm);
+            ActiveDocument = docVm;
+            SyncTopLevelWithActive();
+            StatusText = $"Opened: {document.Title}";
+        }
+        else
+        {
+            StatusText = "Failed to open file";
+        }
+    }
+
+    [RelayCommand]
+    private async Task SaveFile()
+    {
+        if (ActiveDocument?.CurrentDocument.IsNewDocument == true)
+        {
+            await SaveFileAs();
+            return;
+        }
+
+        if (ActiveDocument is null) return;
+        var updatedDoc = ActiveDocument.CurrentDocument with { Content = ActiveDocument.EditorViewModel.Text };
+        var success = await _fileService.SaveFileAsync(updatedDoc);
+
+        if (success)
+        {
+            ActiveDocument.ApplyDocument(updatedDoc with { IsDirty = false });
+            SyncTopLevelWithActive();
+            StatusText = $"Saved: {ActiveDocument.Title}";
+        }
+        else
+        {
+            StatusText = "Failed to save file";
+        }
+    }
+
+    [RelayCommand]
+    private async Task SaveFileAs()
+    {
+        var saveDlg = ShowSaveFileDialogAsync;
+        if (saveDlg is null) return;
+        string? defaultExt = null;
+        if (ActiveDocument != null && !string.IsNullOrEmpty(ActiveDocument.CurrentDocument.FilePath))
+        {
+            var ext = System.IO.Path.GetExtension(ActiveDocument.CurrentDocument.FilePath);
+            if (!string.IsNullOrEmpty(ext) && ext.Equals(".txt", StringComparison.OrdinalIgnoreCase))
+            {
+                defaultExt = "txt";
+            }
+        }
+        var result = await saveDlg(defaultExt);
+        if (string.IsNullOrEmpty(result)) return;
+
+        if (ActiveDocument is null) return;
+        var updatedDoc = ActiveDocument.CurrentDocument with
+        {
+            Content = ActiveDocument.EditorViewModel.Text,
+            FilePath = result,
+            Title = System.IO.Path.GetFileNameWithoutExtension(result)
+        };
+
+        var success = await _fileService.SaveFileAsAsync(updatedDoc, result);
+
+        if (success)
+        {
+            ActiveDocument.ApplyDocument(updatedDoc with { IsDirty = false });
+            SyncTopLevelWithActive();
+            StatusText = $"Saved as: {ActiveDocument.Title}";
+        }
+        else
+        {
+            StatusText = "Failed to save file";
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenRecentFile(string filePath) => await OpenFileFromPathAsync(filePath);
+
+    [RelayCommand]
+    private void ClearRecentFiles()
+    {
+        _recentFilesService.ClearRecentFiles();
+        LoadRecentFiles();
+        StatusText = "Recent files cleared";
+    }
+
+    // View Operations
+    [RelayCommand]
     private void ToggleReadMode()
     {
         if (ActiveDocument == null) return;
         ActiveDocument.IsReadMode = !ActiveDocument.IsReadMode;
+    }
+
+    // Tab Management
+    [RelayCommand]
+    private void CloseActiveTab()
+    {
+        CloseDocument(ActiveDocument);
+    }
+
+    [RelayCommand]
+    private void CloseOtherTabs()
+    {
+        if (ActiveDocument == null) return;
+
+        var activeDoc = ActiveDocument;
+        Documents.Clear();
+        Documents.Add(activeDoc);
+        ActiveDocument = activeDoc;
+        SyncTopLevelWithActive();
+        StatusText = "Other tabs closed";
+    }
+
+    [RelayCommand]
+    private void CloseAllTabs()
+    {
+        // Close all but create a new one at the end
+        Documents.Clear();
+        ActiveDocument = null;
+        NewFile();
+        StatusText = "All tabs closed";
+    }
+
+    [RelayCommand]
+    private void NextTab()
+    {
+        if (Documents.Count <= 1 || ActiveDocument == null) return;
+
+        int currentIndex = Documents.IndexOf(ActiveDocument);
+        int nextIndex = (currentIndex + 1) % Documents.Count;
+        ActiveDocument = Documents[nextIndex];
+        SyncTopLevelWithActive();
+    }
+
+    [RelayCommand]
+    private void PreviousTab()
+    {
+        if (Documents.Count <= 1 || ActiveDocument == null) return;
+
+        int currentIndex = Documents.IndexOf(ActiveDocument);
+        int previousIndex = currentIndex - 1;
+        if (previousIndex < 0) previousIndex = Documents.Count - 1;
+        ActiveDocument = Documents[previousIndex];
+        SyncTopLevelWithActive();
+    }
+
+    // Export Operations
+    [RelayCommand]
+    private async Task CopyHtmlToClipboard()
+    {
+        if (ActiveDocument == null) return;
+
+        try
+        {
+            var markdown = ActiveDocument.EditorViewModel.Text;
+            var html = await (Application.Current as App)?.Services?.GetRequiredService<IMarkdownService>().RenderToHtmlAsync(markdown)!;
+
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+            {
+                var clipboard = desktop.MainWindow.Clipboard;
+                if (clipboard != null)
+                {
+                    await clipboard.SetTextAsync(html);
+                    StatusText = "HTML copied to clipboard";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Failed to copy HTML: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    private async Task ExportHtml()
+    {
+        var saveHtmlDlg = ShowSaveFileDialogAsync;
+        if (saveHtmlDlg is null) return;
+        var result = await saveHtmlDlg("html");
+        if (string.IsNullOrEmpty(result)) return;
+
+        if (ActiveDocument is null) return;
+        var success = await _exportService.ExportToHtmlAsync(
+            ActiveDocument.CurrentDocument with { Content = ActiveDocument.EditorViewModel.Text },
+            result);
+
+        StatusText = success ? $"Exported to: {result}" : "Failed to export";
+    }
+
+    [RelayCommand]
+    private void Exit()
+    {
+        if (IsDirty)
+        {
+            // TODO: Show confirmation dialog
+        }
+        Environment.Exit(0);
     }
 }

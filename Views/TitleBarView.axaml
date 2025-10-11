@@ -15,7 +15,7 @@
     <Border Background="#FCFCFC" Padding="0" Height="32" Name="TitleBar">
         <Grid ColumnDefinitions="Auto,Auto,*,Auto">
             <!-- Hamburger Menu -->
-            <Menu Grid.Column="0" Background="Transparent" VerticalAlignment="Center" Margin="4,0,0,0" DataContext="{Binding TitleBarVM}" >
+            <Menu Grid.Column="0" Background="Transparent" VerticalAlignment="Center" Margin="4,0,0,0">
                 <MenuItem Padding="8,4">
                     <MenuItem.Header>
                         <TextBlock Text="☰" FontSize="16" VerticalAlignment="Center" Foreground="#2C3E50"/>
@@ -39,7 +39,7 @@
                         </MenuItem.Icon>
                         <MenuItem.ItemTemplate>
                             <DataTemplate x:DataType="sys:String">
-                                <MenuItem Header="{Binding}" Command="{Binding $parent[Menu].((vm:TitleBarViewModel)DataContext).OpenRecentFileCommand}" CommandParameter="{Binding}"/>
+                                <MenuItem Header="{Binding}" Command="{Binding $parent[Menu].DataContext.OpenRecentFileCommand}" CommandParameter="{Binding}"/>
                             </DataTemplate>
                         </MenuItem.ItemTemplate>
                     </MenuItem>
@@ -53,32 +53,32 @@
                     <MenuItem Header="Save As..." Command="{Binding SaveFileAsCommand}" InputGesture="Ctrl+Shift+S"/>
                     <Separator/>
                     <!-- Edit Menu Items -->
-                    <MenuItem Header="Bold" Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).ActiveDocument.EditorViewModel.InsertBoldCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+B">
+                    <MenuItem Header="Bold" Command="{Binding ActiveDocument.EditorViewModel.InsertBoldCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+B">
                       <MenuItem.Icon>
                         <TextBlock Text="B" FontWeight="Bold" FontSize="12"/>
                       </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Header="Italic" Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).ActiveDocument.EditorViewModel.InsertItalicCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+I">
+                    <MenuItem Header="Italic" Command="{Binding ActiveDocument.EditorViewModel.InsertItalicCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+I">
                       <MenuItem.Icon>
                         <TextBlock Text="I" FontStyle="Italic" FontSize="12"/>
                       </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Header="Link" Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).ActiveDocument.EditorViewModel.InsertLinkCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+K">
+                    <MenuItem Header="Link" Command="{Binding ActiveDocument.EditorViewModel.InsertLinkCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+K">
                       <MenuItem.Icon>
                         <TextBlock Text="🔗" FontSize="12"/>
                       </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Header="Image" Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).ActiveDocument.EditorViewModel.InsertImageCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+Shift+I">
+                    <MenuItem Header="Image" Command="{Binding ActiveDocument.EditorViewModel.InsertImageCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+Shift+I">
                       <MenuItem.Icon>
                         <TextBlock Text="🖼" FontSize="12"/>
                       </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Header="Code Block" Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).ActiveDocument.EditorViewModel.InsertCodeBlockCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+Shift+C">
+                    <MenuItem Header="Code Block" Command="{Binding ActiveDocument.EditorViewModel.InsertCodeBlockCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+Shift+C">
                         <MenuItem.Icon>
                             <TextBlock Text="&lt;/&gt;" FontSize="10" FontFamily="Consolas"/>
                         </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Header="Table" Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).ActiveDocument.EditorViewModel.InsertTableCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+T">
+                    <MenuItem Header="Table" Command="{Binding ActiveDocument.EditorViewModel.InsertTableCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+T">
                         <MenuItem.Icon>
                             <TextBlock Text="⊞" FontSize="12"/>
                         </MenuItem.Icon>
@@ -122,7 +122,7 @@
             <!-- App Icon & Title -->
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="8,0,0,0" VerticalAlignment="Center">
                 <TextBlock Text="📝" FontSize="14" VerticalAlignment="Center"/>
-                <TextBlock Text="{Binding TitleBarVM.WindowTitle}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#2C3E50"/>
+                <TextBlock Text="{Binding WindowTitle}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#2C3E50"/>
             </StackPanel>
 
             <!-- Window Control Buttons -->

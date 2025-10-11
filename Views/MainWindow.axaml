@@ -9,7 +9,7 @@
         x:Class="MarkdownViewer.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="{Binding TitleBarVM.WindowTitle}"
+        Title="{Binding WindowTitle}"
         Width="1200" Height="700"
         DragDrop.AllowDrop="True"
         ExtendClientAreaToDecorationsHint="True"
@@ -22,12 +22,12 @@
 
     <Window.KeyBindings>
         <!-- Tab Navigation -->
-        <KeyBinding Gesture="Ctrl+Tab" Command="{Binding TitleBarVM.NextTabCommand}"/>
-        <KeyBinding Gesture="Ctrl+Shift+Tab" Command="{Binding TitleBarVM.PreviousTabCommand}"/>
-        <KeyBinding Gesture="Ctrl+W" Command="{Binding TitleBarVM.CloseActiveTabCommand}"/>
-        <KeyBinding Gesture="Ctrl+Shift+W" Command="{Binding TitleBarVM.CloseAllTabsCommand}"/>
+        <KeyBinding Gesture="Ctrl+Tab" Command="{Binding NextTabCommand}"/>
+        <KeyBinding Gesture="Ctrl+Shift+Tab" Command="{Binding PreviousTabCommand}"/>
+        <KeyBinding Gesture="Ctrl+W" Command="{Binding CloseActiveTabCommand}"/>
+        <KeyBinding Gesture="Ctrl+Shift+W" Command="{Binding CloseAllTabsCommand}"/>
         <!-- Copy HTML -->
-        <KeyBinding Gesture="Ctrl+Shift+H" Command="{Binding TitleBarVM.CopyHtmlToClipboardCommand}"/>
+        <KeyBinding Gesture="Ctrl+Shift+H" Command="{Binding CopyHtmlToClipboardCommand}"/>
     </Window.KeyBindings>
 
     <DockPanel>
