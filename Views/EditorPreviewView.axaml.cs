@@ -54,7 +54,7 @@ public partial class EditorPreviewView : UserControl
         if (_editor == null) return;
 
         // Subscribe to text changes
-        _editor.PropertyChanged += (s, e) =>
+        _editor.PropertyChanged += (_, e) =>
         {
             if (e.Property.Name == nameof(TextBox.Text))
             {
@@ -72,7 +72,7 @@ public partial class EditorPreviewView : UserControl
         {
             Interval = TimeSpan.FromMilliseconds(300)
         };
-        _renderTimer.Tick += async (s, e) =>
+        _renderTimer.Tick += async (_, _) =>
         {
             _renderTimer?.Stop();
             if (DataContext is DocumentViewModel vm && _editor != null)
@@ -94,7 +94,7 @@ public partial class EditorPreviewView : UserControl
             vm.EditorViewModel.TextInsertRequested += OnTextInsertRequested;
 
             // Subscribe to EditorViewModel.Text changes (for file loading)
-            vm.EditorViewModel.PropertyChanged += (s, args) =>
+            vm.EditorViewModel.PropertyChanged += (_, args) =>
             {
                 if (args.PropertyName == nameof(vm.EditorViewModel.Text) && _editor != null)
                 {
@@ -107,7 +107,7 @@ public partial class EditorPreviewView : UserControl
             };
 
             // Subscribe to read mode changes
-            vm.PropertyChanged += (s, args) =>
+            vm.PropertyChanged += (_, args) =>
             {
                 if (args.PropertyName == nameof(vm.IsReadMode) && _editor != null)
                 {

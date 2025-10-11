@@ -36,7 +36,7 @@ public partial class DocumentViewModel : ViewModelBase
         _editorViewModel = editorViewModel;
         _previewViewModel = previewViewModel;
 
-        _editorViewModel.TextChangedDebounced += async (s, text) =>
+        _editorViewModel.TextChangedDebounced += async (_, text) =>
         {
             await _previewViewModel.UpdatePreviewAsync(text);
             IsDirty = CurrentDocument.Content != text;

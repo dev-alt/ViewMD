@@ -29,13 +29,13 @@ public partial class MainWindow : Window
         var minimizeButton = this.FindControl<Button>("MinimizeButton");
         if (minimizeButton != null)
         {
-            minimizeButton.Click += (s, e) => WindowState = WindowState.Minimized;
+            minimizeButton.Click += (_, _) => WindowState = WindowState.Minimized;
         }
 
         var maximizeButton = this.FindControl<Button>("MaximizeButton");
         if (maximizeButton != null)
         {
-            maximizeButton.Click += (s, e) =>
+            maximizeButton.Click += (_, _) =>
             {
                 WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
             };
@@ -44,7 +44,7 @@ public partial class MainWindow : Window
         var closeButton = this.FindControl<Button>("CloseButton");
         if (closeButton != null)
         {
-            closeButton.Click += (s, e) => Close();
+            closeButton.Click += (_, _) => Close();
         }
 
         // Drag-and-drop support

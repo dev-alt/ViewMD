@@ -20,7 +20,7 @@ public partial class EditorViewModel : ViewModelBase
     {
         _debounceTimer?.Stop();
         _debounceTimer = new System.Timers.Timer(DebounceDelay);
-        _debounceTimer.Elapsed += (s, e) =>
+        _debounceTimer.Elapsed += (_, _) =>
         {
             TextChangedDebounced?.Invoke(this, value);
             _debounceTimer?.Stop();
