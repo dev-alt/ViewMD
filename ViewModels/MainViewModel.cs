@@ -412,4 +412,26 @@ public partial class MainViewModel : ViewModelBase
         }
         Environment.Exit(0);
     }
+
+    // Update Operations
+    [RelayCommand]
+    private void CheckForUpdates()
+    {
+        // TODO: Replace with your actual Store ProductId after publishing
+        const string productId = "9N1234567890"; // Placeholder: Get from Partner Center after publishing
+        var uri = $"ms-windows-store://pdp/?ProductId={productId}";
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = uri,
+                UseShellExecute = true
+            });
+            StatusText = "Opening Microsoft Store...";
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Failed to open Store: {ex.Message}";
+        }
+    }
 }

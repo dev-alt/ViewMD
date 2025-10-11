@@ -111,6 +111,12 @@
                         </MenuItem.Icon>
                     </MenuItem>
                     <Separator/>
+                    <MenuItem Header="Check for Updates" Command="{Binding CheckForUpdatesCommand}" Name="CheckForUpdatesMenuItem">
+                        <MenuItem.Icon>
+                            <TextBlock Text="🔄" FontSize="12"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <Separator/>
                     <MenuItem Header="Exit" Command="{Binding ExitCommand}" InputGesture="Alt+F4" Name="ExitMenuItem">
                         <MenuItem.Icon>
                             <TextBlock Text="🚪" FontSize="12"/>

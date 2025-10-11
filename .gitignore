@@ -76,3 +76,4 @@ _temp_*.cer
 # Windows Store association (contains publisher details)
 Package.StoreAssociation.xml
 installer/inno-setup.iss
+.env
