@@ -14,9 +14,10 @@ public partial class MainWindow : Window
 {
     public MainWindow()
     {
-
         InitializeComponent();
-        SetupViewModel();
+
+        // Set up ViewModel after window is opened to ensure DataContext is set
+        this.Opened += (sender, e) => SetupViewModel();
 
         // Drag-and-drop support
         this.AddHandler(DragDrop.DragEnterEvent, OnDragOver);
@@ -42,12 +43,6 @@ public partial class MainWindow : Window
             viewModel.ShowOpenFileDialogAsync = ShowOpenFileDialogAsync;
             viewModel.ShowSaveFileDialogAsync = ShowSaveFileDialogAsync;
         }
-    }
-
-    protected override void OnDataContextChanged(EventArgs e)
-    {
-        base.OnDataContextChanged(e);
-        SetupViewModel();
     }
 
     private async Task<string?> ShowOpenFileDialogAsync()
