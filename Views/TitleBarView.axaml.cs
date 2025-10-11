@@ -45,6 +45,11 @@ public partial class TitleBarView : UserControl
             Console.WriteLine($"DEBUG: NewMenuItem.IsEnabled: {newMenuItem.IsEnabled}");
             Console.WriteLine($"DEBUG: NewMenuItem.IsEffectivelyEnabled: {newMenuItem.IsEffectivelyEnabled}");
 
+            if (newMenuItem.Command != null)
+            {
+                Console.WriteLine($"DEBUG: NewMenuItem.Command.CanExecute(null): {newMenuItem.Command.CanExecute(null)}");
+            }
+
             newMenuItem.Click += (s, e) =>
             {
                 Console.WriteLine("DEBUG: NewMenuItem CLICKED!");
@@ -53,6 +58,17 @@ public partial class TitleBarView : UserControl
             newMenuItem.PointerPressed += (s, e) =>
             {
                 Console.WriteLine("DEBUG: NewMenuItem PointerPressed!");
+
+                // Try to manually execute the command
+                if (newMenuItem.Command != null && newMenuItem.Command.CanExecute(null))
+                {
+                    Console.WriteLine("DEBUG: Manually executing command!");
+                    newMenuItem.Command.Execute(null);
+                }
+                else
+                {
+                    Console.WriteLine($"DEBUG: Command cannot execute! Command null: {newMenuItem.Command == null}, CanExecute: {newMenuItem.Command?.CanExecute(null)}");
+                }
             };
         }
         else
