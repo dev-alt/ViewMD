@@ -21,12 +21,12 @@
                         <TextBlock Text="☰" FontSize="16" VerticalAlignment="Center" Foreground="#2C3E50"/>
                     </MenuItem.Header>
                     <!-- File Menu Items -->
-                    <MenuItem Header="New" Command="{Binding NewFileCommand}" InputGesture="Ctrl+N">
+                    <MenuItem Header="New" Command="{Binding NewFileCommand}" InputGesture="Ctrl+N" Name="NewMenuItem">
                         <MenuItem.Icon>
                             <TextBlock Text="📄" FontSize="12"/>
                         </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Header="Open..." Command="{Binding OpenFileCommand}" InputGesture="Ctrl+O">
+                    <MenuItem Header="Open..." Command="{Binding OpenFileCommand}" InputGesture="Ctrl+O" Name="OpenMenuItem">
                         <MenuItem.Icon>
                             <TextBlock Text="📂" FontSize="12"/>
                         </MenuItem.Icon>

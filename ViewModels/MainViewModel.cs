@@ -173,6 +173,7 @@ public partial class MainViewModel : ViewModelBase
     public void NewFile()
     {
         Console.WriteLine("DEBUG: NewFile command invoked");
+        Console.WriteLine($"DEBUG: Documents.Count before: {Documents.Count}");
         StatusText = "DEBUG: NewFile command invoked";
 
         if (IsDirty)
@@ -181,12 +182,22 @@ public partial class MainViewModel : ViewModelBase
         }
 
         var docVm = CreateDocumentViewModel();
+        Console.WriteLine($"DEBUG: Created DocumentViewModel: {docVm != null}");
+
         docVm.ApplyDocument(new MarkdownDocument());
+        Console.WriteLine("DEBUG: Applied new MarkdownDocument");
+
         Documents.Add(docVm);
+        Console.WriteLine($"DEBUG: Added to Documents collection. Count after: {Documents.Count}");
+
         ActiveDocument = docVm;
+        Console.WriteLine($"DEBUG: Set ActiveDocument. Is null: {ActiveDocument == null}");
+
         SyncTopLevelWithActive();
+        Console.WriteLine("DEBUG: Called SyncTopLevelWithActive");
+
         StatusText = "New file created";
-        Console.WriteLine("DEBUG: NewFile command completed");
+        Console.WriteLine($"DEBUG: NewFile command completed. WindowTitle: {WindowTitle}");
     }
 
     [RelayCommand]
