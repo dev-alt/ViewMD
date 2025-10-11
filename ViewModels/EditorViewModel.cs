@@ -33,7 +33,7 @@ public partial class EditorViewModel : ViewModelBase
     private void UpdateState()
     {
         var wordCount = string.IsNullOrWhiteSpace(Text) ? 0 :
-            Text.Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Length;
+            Text.Split([' ', '\t', '\r', '\n'], StringSplitOptions.RemoveEmptyEntries).Length;
 
         State = State with
         {

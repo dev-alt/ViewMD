@@ -14,9 +14,16 @@ public partial class MainWindow : Window
 {
     public MainWindow()
     {
-        
+
         InitializeComponent();
         SetupViewModel();
+
+        // Enable title bar dragging
+        var titleBar = this.FindControl<Border>("TitleBar");
+        if (titleBar != null)
+        {
+            titleBar.PointerPressed += TitleBar_PointerPressed;
+        }
 
         // Drag-and-drop support
         this.AddHandler(DragDrop.DragEnterEvent, OnDragOver);
@@ -56,21 +63,21 @@ public partial class MainWindow : Window
         {
             Title = "Open Markdown File",
             AllowMultiple = false,
-            FileTypeFilter = new[]
-            {
+            FileTypeFilter =
+            [
                 new FilePickerFileType("Markdown Files")
                 {
-                    Patterns = new[] { "*.md", "*.markdown" }
+                    Patterns = ["*.md", "*.markdown"]
                 },
                 new FilePickerFileType("Text Files")
                 {
-                    Patterns = new[] { "*.txt" }
+                    Patterns = ["*.txt"]
                 },
                 new FilePickerFileType("All Files")
                 {
-                    Patterns = new[] { "*.*" }
+                    Patterns = ["*.*"]
                 }
-            }
+            ]
         });
 
         return files.Count > 0 ? files[0].Path.LocalPath : null;
@@ -87,14 +94,14 @@ public partial class MainWindow : Window
                 {
                     new FilePickerFileType("HTML Files")
                     {
-                        Patterns = new[] { "*.html", "*.htm" }
+                        Patterns = ["*.html", "*.htm"]
                     }
                 }
                 : new[]
                 {
                     new FilePickerFileType("Markdown Files")
                     {
-                        Patterns = new[] { "*.md", "*.markdown" }
+                        Patterns = ["*.md", "*.markdown"]
                     }
                 }
         });
@@ -233,6 +240,14 @@ public partial class MainWindow : Window
                     : "No supported files found";
             }
             e.Handled = true;
+        }
+    }
+
+    private void TitleBar_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+        {
+            BeginMoveDrag(e);
         }
     }
 }
