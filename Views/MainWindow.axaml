@@ -9,7 +9,7 @@
         x:Class="MarkdownViewer.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="{Binding WindowTitle}"
+        Title="{Binding TitleBarVM.WindowTitle}"
         Width="1200" Height="700"
         DragDrop.AllowDrop="True"
         ExtendClientAreaToDecorationsHint="True"
@@ -22,143 +22,17 @@
 
     <Window.KeyBindings>
         <!-- Tab Navigation -->
-        <KeyBinding Gesture="Ctrl+Tab" Command="{Binding NextTabCommand}"/>
-        <KeyBinding Gesture="Ctrl+Shift+Tab" Command="{Binding PreviousTabCommand}"/>
-        <KeyBinding Gesture="Ctrl+W" Command="{Binding CloseActiveTabCommand}"/>
-        <KeyBinding Gesture="Ctrl+Shift+W" Command="{Binding CloseAllTabsCommand}"/>
+        <KeyBinding Gesture="Ctrl+Tab" Command="{Binding TitleBarVM.NextTabCommand}"/>
+        <KeyBinding Gesture="Ctrl+Shift+Tab" Command="{Binding TitleBarVM.PreviousTabCommand}"/>
+        <KeyBinding Gesture="Ctrl+W" Command="{Binding TitleBarVM.CloseActiveTabCommand}"/>
+        <KeyBinding Gesture="Ctrl+Shift+W" Command="{Binding TitleBarVM.CloseAllTabsCommand}"/>
         <!-- Copy HTML -->
-        <KeyBinding Gesture="Ctrl+Shift+H" Command="{Binding CopyHtmlToClipboardCommand}"/>
+        <KeyBinding Gesture="Ctrl+Shift+H" Command="{Binding TitleBarVM.CopyHtmlToClipboardCommand}"/>
     </Window.KeyBindings>
 
     <DockPanel>
         <!-- Title Bar with Hamburger Menu & Window Controls -->
-        <Border DockPanel.Dock="Top" Background="#FCFCFC" Padding="0" Height="32" Name="TitleBar">
-            <Grid ColumnDefinitions="Auto,Auto,*,Auto">
-                <!-- Hamburger Menu -->
-                <Menu Grid.Column="0" Background="Transparent" VerticalAlignment="Center" Margin="4,0,0,0">
-                    <MenuItem Padding="8,4">
-                        <MenuItem.Header>
-                            <TextBlock Text="☰" FontSize="16" VerticalAlignment="Center" Foreground="#2C3E50"/>
-                        </MenuItem.Header>
-                        <!-- File Menu Items -->
-                        <MenuItem Header="New" Command="{Binding NewFileCommand}" InputGesture="Ctrl+N">
-                            <MenuItem.Icon>
-                                <TextBlock Text="📄" FontSize="12"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="Open..." Command="{Binding OpenFileCommand}" InputGesture="Ctrl+O">
-                            <MenuItem.Icon>
-                                <TextBlock Text="📂" FontSize="12"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <Separator/>
-                        <!-- Recent Files -->
-                        <MenuItem Header="Recent Files" ItemsSource="{Binding RecentFiles}">
-                            <MenuItem.Icon>
-                                <TextBlock Text="🕐" FontSize="12"/>
-                            </MenuItem.Icon>
-                            <MenuItem.ItemTemplate>
-                                <DataTemplate>
-                                    <MenuItem Header="{Binding}" Command="{Binding $parent[Window].DataContext.OpenRecentFileCommand}" CommandParameter="{Binding}"/>
-                                </DataTemplate>
-                            </MenuItem.ItemTemplate>
-                        </MenuItem>
-                        <MenuItem Header="Clear Recent Files" Command="{Binding ClearRecentFilesCommand}"/>
-                        <Separator/>
-                        <MenuItem Header="Save" Command="{Binding SaveFileCommand}" InputGesture="Ctrl+S">
-                            <MenuItem.Icon>
-                                <TextBlock Text="💾" FontSize="12"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="Save As..." Command="{Binding SaveFileAsCommand}" InputGesture="Ctrl+Shift+S"/>
-                        <Separator/>
-                        <!-- Edit Menu Items -->
-                        <MenuItem Header="Bold" Command="{Binding ActiveDocument.EditorViewModel.InsertBoldCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+B">
-                            <MenuItem.Icon>
-                                <TextBlock Text="B" FontWeight="Bold" FontSize="12"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="Italic" Command="{Binding ActiveDocument.EditorViewModel.InsertItalicCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+I">
-                            <MenuItem.Icon>
-                                <TextBlock Text="I" FontStyle="Italic" FontSize="12"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="Link" Command="{Binding ActiveDocument.EditorViewModel.InsertLinkCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+K">
-                            <MenuItem.Icon>
-                                <TextBlock Text="🔗" FontSize="12"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="Image" Command="{Binding ActiveDocument.EditorViewModel.InsertImageCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+Shift+I">
-                            <MenuItem.Icon>
-                                <TextBlock Text="🖼" FontSize="12"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="Code Block" Command="{Binding ActiveDocument.EditorViewModel.InsertCodeBlockCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+Shift+C">
-                            <MenuItem.Icon>
-                                <TextBlock Text="&lt;/&gt;" FontSize="10" FontFamily="Consolas"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="Table" Command="{Binding ActiveDocument.EditorViewModel.InsertTableCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+T">
-                            <MenuItem.Icon>
-                                <TextBlock Text="⊞" FontSize="12"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <Separator/>
-                        <!-- View Menu Items -->
-                        <MenuItem Header="Toggle Read Mode" Command="{Binding ToggleReadModeCommand}" InputGesture="F6">
-                            <MenuItem.Icon>
-                                <TextBlock Text="👁" FontSize="12"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <Separator/>
-                        <!-- Tab Commands -->
-                        <MenuItem Header="Close Tab" Command="{Binding CloseActiveTabCommand}" InputGesture="Ctrl+W">
-                            <MenuItem.Icon>
-                                <TextBlock Text="✕" FontSize="12"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="Close Other Tabs" Command="{Binding CloseOtherTabsCommand}"/>
-                        <MenuItem Header="Close All Tabs" Command="{Binding CloseAllTabsCommand}" InputGesture="Ctrl+Shift+W"/>
-                        <Separator/>
-                        <MenuItem Header="Copy HTML to Clipboard" Command="{Binding CopyHtmlToClipboardCommand}" InputGesture="Ctrl+Shift+H">
-                            <MenuItem.Icon>
-                                <TextBlock Text="📋" FontSize="12"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="Export HTML..." Command="{Binding ExportHtmlCommand}">
-                            <MenuItem.Icon>
-                                <TextBlock Text="📤" FontSize="12"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <Separator/>
-                        <MenuItem Header="Exit" Command="{Binding ExitCommand}" InputGesture="Alt+F4">
-                            <MenuItem.Icon>
-                                <TextBlock Text="🚪" FontSize="12"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                    </MenuItem>
-                </Menu>
-
-                <!-- App Icon & Title -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="8,0,0,0" VerticalAlignment="Center">
-                    <TextBlock Text="📝" FontSize="14" VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding WindowTitle}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#2C3E50"/>
-                </StackPanel>
-
-                <!-- Window Control Buttons -->
-                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="0" HorizontalAlignment="Right">
-                    <Button Name="MinimizeButton" Width="46" Height="32" Padding="0" Background="Transparent" BorderThickness="0" ToolTip.Tip="Minimize">
-                        <TextBlock Text="─" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,-8,0,0"/>
-                    </Button>
-                    <Button Name="MaximizeButton" Width="46" Height="32" Padding="0" Background="Transparent" BorderThickness="0" ToolTip.Tip="Maximize">
-                        <TextBlock Text="☐" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                    </Button>
-                    <Button Name="CloseButton" Width="46" Height="32" Padding="0" Background="Transparent" BorderThickness="0" ToolTip.Tip="Close">
-                        <TextBlock Text="✕" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                    </Button>
-                </StackPanel>
-            </Grid>
-        </Border>
+        <views:TitleBarView DockPanel.Dock="Top" />
 
         <!-- Tabs Below Menu -->
         <Border DockPanel.Dock="Top" Background="#F8F9FA" BorderBrush="#E0E0E0" BorderThickness="0,1,0,1" Padding="4,2">

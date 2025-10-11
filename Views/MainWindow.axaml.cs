@@ -18,35 +18,6 @@ public partial class MainWindow : Window
         InitializeComponent();
         SetupViewModel();
 
-        // Enable title bar dragging
-        var titleBar = this.FindControl<Border>("TitleBar");
-        if (titleBar != null)
-        {
-            titleBar.PointerPressed += TitleBar_PointerPressed;
-        }
-
-        // Window control buttons
-        var minimizeButton = this.FindControl<Button>("MinimizeButton");
-        if (minimizeButton != null)
-        {
-            minimizeButton.Click += (_, _) => WindowState = WindowState.Minimized;
-        }
-
-        var maximizeButton = this.FindControl<Button>("MaximizeButton");
-        if (maximizeButton != null)
-        {
-            maximizeButton.Click += (_, _) =>
-            {
-                WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
-            };
-        }
-
-        var closeButton = this.FindControl<Button>("CloseButton");
-        if (closeButton != null)
-        {
-            closeButton.Click += (_, _) => Close();
-        }
-
         // Drag-and-drop support
         this.AddHandler(DragDrop.DragEnterEvent, OnDragOver);
         this.AddHandler(DragDrop.DragLeaveEvent, OnDragLeave);
@@ -119,13 +90,13 @@ public partial class MainWindow : Window
                         Patterns = ["*.html", "*.htm"]
                     }
                 }
-                : new[]
-                {
+                :
+                [
                     new FilePickerFileType("Markdown Files")
                     {
                         Patterns = ["*.md", "*.markdown"]
                     }
-                }
+                ]
         });
 
         return file?.Path.LocalPath;
@@ -217,7 +188,7 @@ public partial class MainWindow : Window
             }
         }
 
-        string[] paths = pathList.Distinct().ToArray();
+        string[] paths = [.. pathList.Distinct()];
 
         if (paths.Length == 0) return;
 
@@ -262,14 +233,6 @@ public partial class MainWindow : Window
                     : "No supported files found";
             }
             e.Handled = true;
-        }
-    }
-
-    private void TitleBar_PointerPressed(object? sender, PointerPressedEventArgs e)
-    {
-        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
-        {
-            BeginMoveDrag(e);
         }
     }
 }

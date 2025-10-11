@@ -1,0 +1,142 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MarkdownViewer.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:sys="using:System"
+             mc:Ignorable="d"
+             x:Class="MarkdownViewer.Views.TitleBarView"
+             x:DataType="vm:MainViewModel">
+
+    <Design.DataContext>
+        <vm:MainViewModel/>
+    </Design.DataContext>
+
+    <Border Background="#FCFCFC" Padding="0" Height="32" Name="TitleBar">
+        <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+            <!-- Hamburger Menu -->
+            <Menu Grid.Column="0" Background="Transparent" VerticalAlignment="Center" Margin="4,0,0,0" DataContext="{Binding TitleBarVM}">
+                <MenuItem Padding="8,4">
+                    <MenuItem.Header>
+                        <TextBlock Text="☰" FontSize="16" VerticalAlignment="Center" Foreground="#2C3E50"/>
+                    </MenuItem.Header>
+                    <!-- File Menu Items -->
+                    <MenuItem Header="New" Command="{Binding NewFileCommand}" InputGesture="Ctrl+N">
+                        <MenuItem.Icon>
+                            <TextBlock Text="📄" FontSize="12"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Open..." Command="{Binding OpenFileCommand}" InputGesture="Ctrl+O">
+                        <MenuItem.Icon>
+                            <TextBlock Text="📂" FontSize="12"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <Separator/>
+                    <!-- Recent Files -->
+                    <MenuItem Header="Recent Files" ItemsSource="{Binding RecentFiles}">
+                        <MenuItem.Icon>
+                            <TextBlock Text="📂" FontSize="12"/>
+                        </MenuItem.Icon>
+                        <MenuItem.ItemTemplate>
+                            <DataTemplate x:DataType="sys:String">
+                                <MenuItem Header="{Binding}" Command="{Binding $parent[Menu].DataContext.OpenRecentFileCommand}" CommandParameter="{Binding}"/>
+                            </DataTemplate>
+                        </MenuItem.ItemTemplate>
+                    </MenuItem>
+                    <MenuItem Header="Clear Recent Files" Command="{Binding ClearRecentFilesCommand}"/>
+                    <Separator/>
+                    <MenuItem Header="Save" Command="{Binding SaveFileCommand}" InputGesture="Ctrl+S">
+                        <MenuItem.Icon>
+                            <TextBlock Text="💾" FontSize="12"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Save As..." Command="{Binding SaveFileAsCommand}" InputGesture="Ctrl+Shift+S"/>
+                    <Separator/>
+                    <!-- Edit Menu Items -->
+                    <MenuItem Header="Bold" Command="{Binding $parent[UserControl].DataContext.ActiveDocument.EditorViewModel.InsertBoldCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+B">
+                      <MenuItem.Icon>
+                        <TextBlock Text="B" FontWeight="Bold" FontSize="12"/>
+                      </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Italic" Command="{Binding $parent[UserControl].DataContext.ActiveDocument.EditorViewModel.InsertItalicCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+I">
+                      <MenuItem.Icon>
+                        <TextBlock Text="I" FontStyle="Italic" FontSize="12"/>
+                      </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Link" Command="{Binding $parent[UserControl].DataContext.ActiveDocument.EditorViewModel.InsertLinkCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+K">
+                      <MenuItem.Icon>
+                        <TextBlock Text="🔗" FontSize="12"/>
+                      </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Image" Command="{Binding $parent[UserControl].DataContext.ActiveDocument.EditorViewModel.InsertImageCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+Shift+I">
+                      <MenuItem.Icon>
+                        <TextBlock Text="🖼" FontSize="12"/>
+                      </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Code Block" Command="{Binding $parent[UserControl].DataContext.ActiveDocument.EditorViewModel.InsertCodeBlockCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+Shift+C">
+                        <MenuItem.Icon>
+                            <TextBlock Text="&lt;/&gt;" FontSize="10" FontFamily="Consolas"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Table" Command="{Binding $parent[UserControl].DataContext.ActiveDocument.EditorViewModel.InsertTableCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+T">
+                        <MenuItem.Icon>
+                            <TextBlock Text="⊞" FontSize="12"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <Separator/>
+                    <!-- View Menu Items -->
+                    <MenuItem Header="Toggle Read Mode" Command="{Binding ToggleReadModeCommand}" InputGesture="F6">
+                        <MenuItem.Icon>
+                            <TextBlock Text="👁" FontSize="12"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <Separator/>
+                    <!-- Tab Commands -->
+                    <MenuItem Header="Close Tab" Command="{Binding CloseActiveTabCommand}" InputGesture="Ctrl+W">
+                        <MenuItem.Icon>
+                            <TextBlock Text="x" FontSize="12"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Close Other Tabs" Command="{Binding CloseOtherTabsCommand}"/>
+                    <MenuItem Header="Close All Tabs" Command="{Binding CloseAllTabsCommand}" InputGesture="Ctrl+Shift+W"/>
+                    <Separator/>
+                    <MenuItem Header="Copy HTML to Clipboard" Command="{Binding CopyHtmlToClipboardCommand}" InputGesture="Ctrl+Shift+H">
+                        <MenuItem.Icon>
+                            <TextBlock Text="📋" FontSize="12"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Export HTML..." Command="{Binding ExportHtmlCommand}">
+                        <MenuItem.Icon>
+                            <TextBlock Text="📤" FontSize="12"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <Separator/>
+                    <MenuItem Header="Exit" Command="{Binding ExitCommand}" InputGesture="Alt+F4">
+                        <MenuItem.Icon>
+                            <TextBlock Text="🚪" FontSize="12"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </MenuItem>
+            </Menu>
+
+            <!-- App Icon & Title -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="8,0,0,0" VerticalAlignment="Center">
+                <TextBlock Text="📝" FontSize="14" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding TitleBarVM.WindowTitle}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#2C3E50"/>
+            </StackPanel>
+
+            <!-- Window Control Buttons -->
+            <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="0" HorizontalAlignment="Right">
+                <Button Name="MinimizeButton" Width="46" Height="32" Padding="0" Background="Transparent" BorderThickness="0" ToolTip.Tip="Minimize">
+                    <TextBlock Text="─" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,-8,0,0"/>
+                </Button>
+                <Button Name="MaximizeButton" Width="46" Height="32" Padding="0" Background="Transparent" BorderThickness="0" ToolTip.Tip="Maximize">
+                    <TextBlock Text="☐" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                </Button>
+                <Button Name="CloseButton" Width="46" Height="32" Padding="0" Background="Transparent" BorderThickness="0" ToolTip.Tip="Close">
+                    <TextBlock Text="X" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>
