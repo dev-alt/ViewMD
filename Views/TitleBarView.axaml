@@ -15,8 +15,8 @@
     <Border Background="#FCFCFC" Padding="0" Height="32" Name="TitleBar">
         <Grid ColumnDefinitions="Auto,Auto,*,Auto">
             <!-- Hamburger Menu -->
-            <Menu Grid.Column="0" Background="Transparent" VerticalAlignment="Center" Margin="4,0,0,0">
-                <MenuItem Padding="8,4">
+            <Menu Grid.Column="0" Background="Transparent" VerticalAlignment="Center" Margin="4,0,0,0" Name="HamburgerMenu">
+                <MenuItem Padding="8,4" Name="HamburgerMenuItem">
                     <MenuItem.Header>
                         <TextBlock Text="☰" FontSize="16" VerticalAlignment="Center" Foreground="#2C3E50"/>
                     </MenuItem.Header>

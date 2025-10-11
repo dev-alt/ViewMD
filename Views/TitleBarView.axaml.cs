@@ -27,12 +27,33 @@ public partial class TitleBarView : UserControl
             titleBar.PointerPressed += TitleBar_PointerPressed;
         }
 
+        // Debug hamburger menu
+        var hamburgerMenuItem = this.FindControl<MenuItem>("HamburgerMenuItem");
+        if (hamburgerMenuItem != null)
+        {
+            Console.WriteLine("DEBUG: Found HamburgerMenuItem");
+            hamburgerMenuItem.PointerPressed += (s, e) => Console.WriteLine("DEBUG: HamburgerMenuItem PointerPressed!");
+            hamburgerMenuItem.SubmenuOpened += (s, e) => Console.WriteLine("DEBUG: HamburgerMenuItem SubmenuOpened!");
+        }
+
         // Debug menu item clicks
         var newMenuItem = this.FindControl<MenuItem>("NewMenuItem");
         if (newMenuItem != null)
         {
-            Console.WriteLine("DEBUG: Found NewMenuItem, attaching click handler");
-            newMenuItem.Click += (s, e) => Console.WriteLine("DEBUG: NewMenuItem CLICKED!");
+            Console.WriteLine($"DEBUG: Found NewMenuItem");
+            Console.WriteLine($"DEBUG: NewMenuItem.Command is null: {newMenuItem.Command == null}");
+            Console.WriteLine($"DEBUG: NewMenuItem.IsEnabled: {newMenuItem.IsEnabled}");
+            Console.WriteLine($"DEBUG: NewMenuItem.IsEffectivelyEnabled: {newMenuItem.IsEffectivelyEnabled}");
+
+            newMenuItem.Click += (s, e) =>
+            {
+                Console.WriteLine("DEBUG: NewMenuItem CLICKED!");
+            };
+
+            newMenuItem.PointerPressed += (s, e) =>
+            {
+                Console.WriteLine("DEBUG: NewMenuItem PointerPressed!");
+            };
         }
         else
         {
@@ -42,8 +63,18 @@ public partial class TitleBarView : UserControl
         var openMenuItem = this.FindControl<MenuItem>("OpenMenuItem");
         if (openMenuItem != null)
         {
-            Console.WriteLine("DEBUG: Found OpenMenuItem, attaching click handler");
-            openMenuItem.Click += (s, e) => Console.WriteLine("DEBUG: OpenMenuItem CLICKED!");
+            Console.WriteLine($"DEBUG: Found OpenMenuItem");
+            Console.WriteLine($"DEBUG: OpenMenuItem.Command is null: {openMenuItem.Command == null}");
+
+            openMenuItem.Click += (s, e) =>
+            {
+                Console.WriteLine("DEBUG: OpenMenuItem CLICKED!");
+            };
+
+            openMenuItem.PointerPressed += (s, e) =>
+            {
+                Console.WriteLine("DEBUG: OpenMenuItem PointerPressed!");
+            };
         }
         else
         {
