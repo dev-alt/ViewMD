@@ -195,7 +195,7 @@ public partial class EditorPreviewView : UserControl
 
         if (string.IsNullOrWhiteSpace(markdownText))
         {
-            var placeholder = new TextBlock
+            var placeholder = new SelectableTextBlock
             {
                 Text = "Start typing markdown in the editor to see the preview...",
                 Foreground = new SolidColorBrush(Color.Parse("#999999")),
@@ -260,7 +260,7 @@ public partial class EditorPreviewView : UserControl
             _ => 16.0
         };
 
-        var textBlock = new TextBlock
+        var textBlock = new SelectableTextBlock
         {
             Text = text,
             FontSize = fontSize,
@@ -288,15 +288,79 @@ public partial class EditorPreviewView : UserControl
 
     private Control RenderParagraph(ParagraphBlock paragraph, Color textColor)
     {
-        var text = ExtractText(paragraph.Inline);
-        return new TextBlock
+        var panel = new WrapPanel { Margin = new Thickness(0, 0, 0, 10) };
+        RenderInlines(panel, paragraph.Inline, textColor);
+        return panel;
+    }
+
+    private void RenderInlines(WrapPanel panel, ContainerInline? inline, Color textColor)
+    {
+        if (inline == null) return;
+        foreach (var item in inline)
         {
-            Text = text,
-            FontSize = 14,
-            Foreground = new SolidColorBrush(textColor),
-            TextWrapping = TextWrapping.Wrap,
-            Margin = new Thickness(0, 0, 0, 10)
-        };
+            switch (item)
+            {
+                case LiteralInline literal:
+                    panel.Children.Add(new SelectableTextBlock
+                    {
+                        Text = literal.Content.ToString(),
+                        FontSize = 14,
+                        Foreground = new SolidColorBrush(textColor)
+                    });
+                    break;
+                case LinkInline link:
+                    var linkButton = new HyperlinkButton
+                    {
+                        Content = ExtractText(link),
+                        NavigateUri = new Uri(link.Url ?? ""),
+                        FontSize = 14,
+                        Foreground = new SolidColorBrush(Color.Parse("#0066CC")),
+                        Margin = new Thickness(0)
+                    };
+                    panel.Children.Add(linkButton);
+                    break;
+                case EmphasisInline emphasis:
+                    var empText = ExtractText(emphasis);
+                    var empBlock = new SelectableTextBlock
+                    {
+                        Text = empText,
+                        FontSize = 14,
+                        Foreground = new SolidColorBrush(textColor)
+                    };
+                    if (emphasis.DelimiterCount == 2 && emphasis.DelimiterChar == '*')
+                        empBlock.FontWeight = FontWeight.Bold;
+                    else if (emphasis.DelimiterCount == 1)
+                        empBlock.FontStyle = FontStyle.Italic;
+                    panel.Children.Add(empBlock);
+                    break;
+                case CodeInline code:
+                    panel.Children.Add(new SelectableTextBlock
+                    {
+                        Text = $"`{code.Content}`",
+                        FontSize = 14,
+                        Foreground = new SolidColorBrush(textColor),
+                        FontFamily = new FontFamily("Consolas,Courier New,monospace")
+                    });
+                    break;
+                case LineBreakInline:
+                    // Add a line break as a new SelectableTextBlock with newline
+                    panel.Children.Add(new SelectableTextBlock
+                    {
+                        Text = "\n",
+                        FontSize = 14,
+                        Foreground = new SolidColorBrush(textColor)
+                    });
+                    break;
+                default:
+                    panel.Children.Add(new SelectableTextBlock
+                    {
+                        Text = item.ToString(),
+                        FontSize = 14,
+                        Foreground = new SolidColorBrush(textColor)
+                    });
+                    break;
+            }
+        }
     }
 
     private Control RenderCodeBlock(CodeBlock codeBlock)
@@ -318,7 +382,7 @@ public partial class EditorPreviewView : UserControl
             CornerRadius = new CornerRadius(4),
             Padding = new Thickness(12),
             Margin = new Thickness(0, 0, 0, 10),
-            Child = new TextBlock
+            Child = new SelectableTextBlock
             {
                 Text = code.ToString().TrimEnd(),
                 FontFamily = new FontFamily("Consolas,Courier New,monospace"),
@@ -351,7 +415,7 @@ public partial class EditorPreviewView : UserControl
                         Foreground = new SolidColorBrush(textColor),
                         Margin = new Thickness(20, 0, 8, 0)
                     });
-                    itemPanel.Children.Add(new TextBlock
+                    itemPanel.Children.Add(new SelectableTextBlock
                     {
                         Text = text,
                         FontSize = 14,
@@ -376,7 +440,7 @@ public partial class EditorPreviewView : UserControl
             if (block is ParagraphBlock para)
             {
                 var text = ExtractText(para.Inline);
-                panel.Children.Add(new TextBlock
+                panel.Children.Add(new SelectableTextBlock
                 {
                     Text = text,
                     FontSize = 14,
