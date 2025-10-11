@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="using:MarkdownViewer.Views"
+        xmlns:conv="using:MarkdownViewer.Converters"
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="700"
         x:Class="MarkdownViewer.Views.MainWindow"
         x:DataType="vm:MainViewModel"
@@ -19,40 +20,143 @@
         <vm:MainViewModel/>
     </Design.DataContext>
 
+    <Window.KeyBindings>
+        <!-- Tab Navigation -->
+        <KeyBinding Gesture="Ctrl+Tab" Command="{Binding NextTabCommand}"/>
+        <KeyBinding Gesture="Ctrl+Shift+Tab" Command="{Binding PreviousTabCommand}"/>
+        <KeyBinding Gesture="Ctrl+W" Command="{Binding CloseActiveTabCommand}"/>
+        <KeyBinding Gesture="Ctrl+Shift+W" Command="{Binding CloseAllTabsCommand}"/>
+        <!-- Copy HTML -->
+        <KeyBinding Gesture="Ctrl+Shift+H" Command="{Binding CopyHtmlToClipboardCommand}"/>
+    </Window.KeyBindings>
+
     <DockPanel>
-        <!-- Compact Title Bar & Menu -->
+        <!-- Title Bar with Hamburger Menu & Window Controls -->
         <Border DockPanel.Dock="Top" Background="#FCFCFC" Padding="0" Height="32" Name="TitleBar">
-            <Grid ColumnDefinitions="Auto,*,Auto">
+            <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+                <!-- Hamburger Menu -->
+                <Menu Grid.Column="0" Background="Transparent" VerticalAlignment="Center" Margin="4,0,0,0">
+                    <MenuItem Padding="8,4">
+                        <MenuItem.Header>
+                            <TextBlock Text="☰" FontSize="16" VerticalAlignment="Center" Foreground="#2C3E50"/>
+                        </MenuItem.Header>
+                        <!-- File Menu Items -->
+                        <MenuItem Header="New" Command="{Binding NewFileCommand}" InputGesture="Ctrl+N">
+                            <MenuItem.Icon>
+                                <TextBlock Text="📄" FontSize="12"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Open..." Command="{Binding OpenFileCommand}" InputGesture="Ctrl+O">
+                            <MenuItem.Icon>
+                                <TextBlock Text="📂" FontSize="12"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <Separator/>
+                        <!-- Recent Files -->
+                        <MenuItem Header="Recent Files" ItemsSource="{Binding RecentFiles}">
+                            <MenuItem.Icon>
+                                <TextBlock Text="🕐" FontSize="12"/>
+                            </MenuItem.Icon>
+                            <MenuItem.ItemTemplate>
+                                <DataTemplate>
+                                    <MenuItem Header="{Binding}" Command="{Binding $parent[Window].DataContext.OpenRecentFileCommand}" CommandParameter="{Binding}"/>
+                                </DataTemplate>
+                            </MenuItem.ItemTemplate>
+                        </MenuItem>
+                        <MenuItem Header="Clear Recent Files" Command="{Binding ClearRecentFilesCommand}"/>
+                        <Separator/>
+                        <MenuItem Header="Save" Command="{Binding SaveFileCommand}" InputGesture="Ctrl+S">
+                            <MenuItem.Icon>
+                                <TextBlock Text="💾" FontSize="12"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Save As..." Command="{Binding SaveFileAsCommand}" InputGesture="Ctrl+Shift+S"/>
+                        <Separator/>
+                        <!-- Edit Menu Items -->
+                        <MenuItem Header="Bold" Command="{Binding ActiveDocument.EditorViewModel.InsertBoldCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+B">
+                            <MenuItem.Icon>
+                                <TextBlock Text="B" FontWeight="Bold" FontSize="12"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Italic" Command="{Binding ActiveDocument.EditorViewModel.InsertItalicCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+I">
+                            <MenuItem.Icon>
+                                <TextBlock Text="I" FontStyle="Italic" FontSize="12"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Link" Command="{Binding ActiveDocument.EditorViewModel.InsertLinkCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+K">
+                            <MenuItem.Icon>
+                                <TextBlock Text="🔗" FontSize="12"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Image" Command="{Binding ActiveDocument.EditorViewModel.InsertImageCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+Shift+I">
+                            <MenuItem.Icon>
+                                <TextBlock Text="🖼" FontSize="12"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Code Block" Command="{Binding ActiveDocument.EditorViewModel.InsertCodeBlockCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+Shift+C">
+                            <MenuItem.Icon>
+                                <TextBlock Text="&lt;/&gt;" FontSize="10" FontFamily="Consolas"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Table" Command="{Binding ActiveDocument.EditorViewModel.InsertTableCommand, TargetNullValue={x:Null}}" InputGesture="Ctrl+T">
+                            <MenuItem.Icon>
+                                <TextBlock Text="⊞" FontSize="12"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <Separator/>
+                        <!-- View Menu Items -->
+                        <MenuItem Header="Toggle Read Mode" Command="{Binding ToggleReadModeCommand}" InputGesture="F6">
+                            <MenuItem.Icon>
+                                <TextBlock Text="👁" FontSize="12"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <Separator/>
+                        <!-- Tab Commands -->
+                        <MenuItem Header="Close Tab" Command="{Binding CloseActiveTabCommand}" InputGesture="Ctrl+W">
+                            <MenuItem.Icon>
+                                <TextBlock Text="✕" FontSize="12"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Close Other Tabs" Command="{Binding CloseOtherTabsCommand}"/>
+                        <MenuItem Header="Close All Tabs" Command="{Binding CloseAllTabsCommand}" InputGesture="Ctrl+Shift+W"/>
+                        <Separator/>
+                        <MenuItem Header="Copy HTML to Clipboard" Command="{Binding CopyHtmlToClipboardCommand}" InputGesture="Ctrl+Shift+H">
+                            <MenuItem.Icon>
+                                <TextBlock Text="📋" FontSize="12"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Export HTML..." Command="{Binding ExportHtmlCommand}">
+                            <MenuItem.Icon>
+                                <TextBlock Text="📤" FontSize="12"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <Separator/>
+                        <MenuItem Header="Exit" Command="{Binding ExitCommand}" InputGesture="Alt+F4">
+                            <MenuItem.Icon>
+                                <TextBlock Text="🚪" FontSize="12"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </MenuItem>
+                </Menu>
+
                 <!-- App Icon & Title -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" Margin="12,0,0,0" VerticalAlignment="Center">
-                    <TextBlock Text="📝" FontSize="16" VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="8,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="📝" FontSize="14" VerticalAlignment="Center"/>
                     <TextBlock Text="{Binding WindowTitle}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#2C3E50"/>
                 </StackPanel>
 
-                <!-- Compact Menu Bar -->
-                <Menu Grid.Column="1" Background="Transparent" VerticalAlignment="Center" Margin="20,0,0,0">
-                    <MenuItem Header="File" Padding="8,4" FontSize="12">
-                        <MenuItem Header="New" Command="{Binding NewFileCommand}" InputGesture="Ctrl+N"/>
-                        <MenuItem Header="Open..." Command="{Binding OpenFileCommand}" InputGesture="Ctrl+O"/>
-                        <MenuItem Header="Save" Command="{Binding SaveFileCommand}" InputGesture="Ctrl+S"/>
-                        <MenuItem Header="Save As..." Command="{Binding SaveFileAsCommand}" InputGesture="Ctrl+Shift+S"/>
-                        <Separator/>
-                        <MenuItem Header="Export HTML..." Command="{Binding ExportHtmlCommand}"/>
-                        <Separator/>
-                        <MenuItem Header="Exit" Command="{Binding ExitCommand}" InputGesture="Alt+F4"/>
-                    </MenuItem>
-                    <MenuItem Header="Edit" Padding="8,4" FontSize="12">
-                        <MenuItem Header="Bold" Command="{Binding ActiveDocument.EditorViewModel.InsertBoldCommand}" InputGesture="Ctrl+B"/>
-                        <MenuItem Header="Italic" Command="{Binding ActiveDocument.EditorViewModel.InsertItalicCommand}" InputGesture="Ctrl+I"/>
-                        <MenuItem Header="Link" Command="{Binding ActiveDocument.EditorViewModel.InsertLinkCommand}" InputGesture="Ctrl+K"/>
-                        <MenuItem Header="Image" Command="{Binding ActiveDocument.EditorViewModel.InsertImageCommand}" InputGesture="Ctrl+Shift+I"/>
-                        <MenuItem Header="Code Block" Command="{Binding ActiveDocument.EditorViewModel.InsertCodeBlockCommand}" InputGesture="Ctrl+Shift+C"/>
-                        <MenuItem Header="Table" Command="{Binding ActiveDocument.EditorViewModel.InsertTableCommand}" InputGesture="Ctrl+T"/>
-                    </MenuItem>
-                    <MenuItem Header="View" Padding="8,4" FontSize="12">
-                        <MenuItem Header="Toggle Read Mode" Command="{Binding ToggleReadModeCommand}" InputGesture="F6"/>
-                    </MenuItem>
-                </Menu>
+                <!-- Window Control Buttons -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="0" HorizontalAlignment="Right">
+                    <Button Name="MinimizeButton" Width="46" Height="32" Padding="0" Background="Transparent" BorderThickness="0" ToolTip.Tip="Minimize">
+                        <TextBlock Text="─" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,-8,0,0"/>
+                    </Button>
+                    <Button Name="MaximizeButton" Width="46" Height="32" Padding="0" Background="Transparent" BorderThickness="0" ToolTip.Tip="Maximize">
+                        <TextBlock Text="☐" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Button>
+                    <Button Name="CloseButton" Width="46" Height="32" Padding="0" Background="Transparent" BorderThickness="0" ToolTip.Tip="Close">
+                        <TextBlock Text="✕" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Button>
+                </StackPanel>
             </Grid>
         </Border>
 
@@ -67,7 +171,7 @@
                                        FontSize="11"
                                        Margin="6,0,4,0"/>
                             <Button Grid.Column="1"
-                                    Command="{Binding DataContext.CloseDocumentCommand, ElementName=MainTabs}"
+                                    Command="{Binding $parent[Window].DataContext.CloseDocumentCommand}"
                                     CommandParameter="{Binding}"
                                     Width="14" Height="14"
                                     Padding="0"
@@ -89,50 +193,81 @@
             </TabControl>
         </Border>
 
-        <!-- Compact Toolbar Below Tabs - Only in Edit Mode -->
+        <!-- Compact Toolbar Below Tabs -->
         <Border DockPanel.Dock="Top"
                 Name="ToolbarBorder"
                 Padding="8,4"
                 Background="#FAFBFC"
                 BorderBrush="#E0E0E0"
                 BorderThickness="0,0,0,1"
-                IsVisible="{Binding !ActiveDocument.IsReadMode}">
-            <StackPanel Orientation="Horizontal" Spacing="2" HorizontalAlignment="Left">
-                <!-- Formatting Tools -->
-                <Button Command="{Binding ActiveDocument.EditorViewModel.InsertBoldCommand}"
-                        ToolTip.Tip="Bold (Ctrl+B)"
-                        Width="26" Height="26"
-                        Classes="toolbar-btn">
-                    <TextBlock Text="B" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                </Button>
-                <Button Command="{Binding ActiveDocument.EditorViewModel.InsertItalicCommand}"
-                        ToolTip.Tip="Italic (Ctrl+I)"
-                        Width="26" Height="26"
-                        Classes="toolbar-btn">
-                    <TextBlock Text="I" FontStyle="Italic" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                </Button>
-                <Button Command="{Binding ActiveDocument.EditorViewModel.InsertLinkCommand}"
-                        ToolTip.Tip="Insert Link (Ctrl+K)"
-                        Width="26" Height="26"
-                        Classes="toolbar-btn">
-                    <TextBlock Text="🔗" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                </Button>
-                <Button Command="{Binding ActiveDocument.EditorViewModel.InsertCodeBlockCommand}"
-                        ToolTip.Tip="Code Block (Ctrl+Shift+C)"
-                        Width="26" Height="26"
-                        Classes="toolbar-btn">
-                    <TextBlock Text="&lt;/&gt;" FontSize="10" FontFamily="Consolas" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                </Button>
+                IsVisible="{Binding ActiveDocument, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <Grid ColumnDefinitions="*,Auto">
+                <!-- Left: Formatting Tools (Edit Mode Only) -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="2" HorizontalAlignment="Left"
+                           IsVisible="{Binding ActiveDocument.IsReadMode, Converter={x:Static conv:BoolNotConverter.Instance}, TargetNullValue=False}">
+                    <Button Command="{Binding ActiveDocument.EditorViewModel.InsertBoldCommand, TargetNullValue={x:Null}}"
+                            ToolTip.Tip="Bold (Ctrl+B)"
+                            Width="26" Height="26"
+                            Classes="toolbar-btn">
+                        <TextBlock Text="B" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Button>
+                    <Button Command="{Binding ActiveDocument.EditorViewModel.InsertItalicCommand, TargetNullValue={x:Null}}"
+                            ToolTip.Tip="Italic (Ctrl+I)"
+                            Width="26" Height="26"
+                            Classes="toolbar-btn">
+                        <TextBlock Text="I" FontStyle="Italic" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Button>
+                    <Button Command="{Binding ActiveDocument.EditorViewModel.InsertLinkCommand, TargetNullValue={x:Null}}"
+                            ToolTip.Tip="Insert Link (Ctrl+K)"
+                            Width="26" Height="26"
+                            Classes="toolbar-btn">
+                        <TextBlock Text="🔗" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Button>
+                    <Button Command="{Binding ActiveDocument.EditorViewModel.InsertCodeBlockCommand, TargetNullValue={x:Null}}"
+                            ToolTip.Tip="Code Block (Ctrl+Shift+C)"
+                            Width="26" Height="26"
+                            Classes="toolbar-btn">
+                        <TextBlock Text="&lt;/&gt;" FontSize="10" FontFamily="Consolas" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Button>
+                </StackPanel>
 
-                <Separator Width="1" Height="18" Margin="4,0"/>
+                <!-- Right: View Controls -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2" HorizontalAlignment="Right">
+                    <!-- Width Controls (Read Mode Only) -->
+                    <StackPanel Orientation="Horizontal" Spacing="2"
+                               IsVisible="{Binding ActiveDocument.IsReadMode, TargetNullValue=False}">
+                        <TextBlock Text="Width:" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0" Opacity="0.7"/>
+                        <Button Width="40" Height="26" Classes="toolbar-btn" ToolTip.Tip="Fit Width"
+                                Command="{Binding ActiveDocument.SetReadWidthCommand, TargetNullValue={x:Null}}"
+                                CommandParameter="0">
+                            <TextBlock Text="Fit" FontSize="10"/>
+                        </Button>
+                        <Button Width="40" Height="26" Classes="toolbar-btn" ToolTip.Tip="50% Width"
+                                Command="{Binding ActiveDocument.SetReadWidthCommand, TargetNullValue={x:Null}}"
+                                CommandParameter="1">
+                            <TextBlock Text="50%" FontSize="10"/>
+                        </Button>
+                        <Button Width="40" Height="26" Classes="toolbar-btn" ToolTip.Tip="75% Width"
+                                Command="{Binding ActiveDocument.SetReadWidthCommand, TargetNullValue={x:Null}}"
+                                CommandParameter="2">
+                            <TextBlock Text="75%" FontSize="10"/>
+                        </Button>
+                        <Button Width="40" Height="26" Classes="toolbar-btn" ToolTip.Tip="100% Width"
+                                Command="{Binding ActiveDocument.SetReadWidthCommand, TargetNullValue={x:Null}}"
+                                CommandParameter="3">
+                            <TextBlock Text="100%" FontSize="10"/>
+                        </Button>
+                        <Separator Width="1" Height="18" Margin="4,0"/>
+                    </StackPanel>
 
-                <Button Command="{Binding ToggleReadModeCommand}"
-                        ToolTip.Tip="Toggle Read Mode (F6)"
-                        Width="26" Height="26"
-                        Classes="toolbar-btn">
-                    <TextBlock Text="👁" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                </Button>
-            </StackPanel>
+                    <Button Command="{Binding ToggleReadModeCommand}"
+                            ToolTip.Tip="Toggle Read Mode (F6)"
+                            Width="26" Height="26"
+                            Classes="toolbar-btn">
+                        <TextBlock Text="👁" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
         </Border>
 
         <!-- Status Bar - Only visible in Edit Mode -->
@@ -142,15 +277,15 @@
                 Name="StatusBar"
                 BorderBrush="#D0FFFFFF"
                 BorderThickness="0,1,0,0"
-                IsVisible="{Binding !ActiveDocument.IsReadMode}">
+                IsVisible="{Binding ActiveDocument, Converter={x:Static ObjectConverters.IsNotNull}}">
             <Border.Effect>
                 <DropShadowEffect Color="#20000000" OffsetX="0" OffsetY="-2" BlurRadius="8"/>
             </Border.Effect>
             <Grid ColumnDefinitions="*,Auto">
                 <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center" Name="StatusText" FontSize="11" Opacity="0.8"/>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16">
-                    <TextBlock Text="{Binding ActiveDocument.EditorViewModel.State.WordCount, StringFormat='Words: {0}'}" VerticalAlignment="Center" FontSize="11" Opacity="0.8"/>
-                    <TextBlock Text="{Binding ActiveDocument.EditorViewModel.State.CharCount, StringFormat='Characters: {0}'}" VerticalAlignment="Center" FontSize="11" Opacity="0.8"/>
+                    <TextBlock Text="{Binding ActiveDocument.EditorViewModel.State.WordCount, StringFormat='Words: {0}', TargetNullValue='Words: 0'}" VerticalAlignment="Center" FontSize="11" Opacity="0.8"/>
+                    <TextBlock Text="{Binding ActiveDocument.EditorViewModel.State.CharCount, StringFormat='Characters: {0}', TargetNullValue='Characters: 0'}" VerticalAlignment="Center" FontSize="11" Opacity="0.8"/>
                 </StackPanel>
             </Grid>
         </Border>

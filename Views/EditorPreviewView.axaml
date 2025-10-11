@@ -56,7 +56,7 @@
                 <Panel HorizontalAlignment="Center">
                     <StackPanel Name="PreviewContentFull"
                                Spacing="8"
-                               MaxWidth="900"
+                               MaxWidth="{Binding PreviewMaxWidth}"
                                Margin="40,40,40,40">
                         <TextBlock Text="Start typing markdown in the editor to see the preview..."
                                   FontStyle="Italic"

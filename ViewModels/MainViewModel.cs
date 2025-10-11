@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using MarkdownViewer.Models;
 using MarkdownViewer.Services;
 using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MarkdownViewer.ViewModels;
@@ -20,11 +21,13 @@ public partial class MainViewModel : ViewModelBase
 
     [ObservableProperty] private System.Collections.ObjectModel.ObservableCollection<DocumentViewModel> _documents = new();
     [ObservableProperty] private DocumentViewModel? _activeDocument;
+    [ObservableProperty] private System.Collections.ObjectModel.ObservableCollection<string> _recentFiles = new();
 
     private readonly IFileService _fileService;
     private readonly IExportService _exportService;
+    private readonly IRecentFilesService _recentFilesService;
 
-    
+
     public MainViewModel()
     {
         // Design-time only: minimal initialization without DI
@@ -35,22 +38,37 @@ public partial class MainViewModel : ViewModelBase
         _currentDocument = new MarkdownDocument();
         _fileService = null!;
         _exportService = null!;
+        _recentFilesService = null!;
     }
     
     public MainViewModel(
         IFileService fileService,
         IExportService exportService,
+        IRecentFilesService recentFilesService,
         EditorViewModel editorViewModel,
         PreviewViewModel previewViewModel)
     {
         _fileService = fileService;
         _exportService = exportService;
+        _recentFilesService = recentFilesService;
         _editorViewModel = editorViewModel;
         _previewViewModel = previewViewModel;
         _currentDocument = new MarkdownDocument();
 
+        // Load recent files
+        LoadRecentFiles();
+
         // Initialize with one tab
         _ = NewFileAsync();
+    }
+
+    private void LoadRecentFiles()
+    {
+        RecentFiles.Clear();
+        foreach (var file in _recentFilesService.RecentFiles)
+        {
+            RecentFiles.Add(file);
+        }
     }
 
     [RelayCommand]
@@ -86,6 +104,9 @@ public partial class MainViewModel : ViewModelBase
         var document = await _fileService.OpenFileAsync(result);
         if (document != null)
         {
+            _recentFilesService.AddRecentFile(result);
+            LoadRecentFiles();
+
             var docVm = CreateDocumentViewModel();
             docVm.ApplyDocument(document);
             Documents.Add(docVm);
@@ -214,6 +235,9 @@ public partial class MainViewModel : ViewModelBase
         var document = await _fileService.OpenFileAsync(path);
         if (document != null)
         {
+            _recentFilesService.AddRecentFile(path);
+            LoadRecentFiles();
+
             var docVm = CreateDocumentViewModel();
             docVm.ApplyDocument(document);
             Documents.Add(docVm);
@@ -283,5 +307,97 @@ public partial class MainViewModel : ViewModelBase
         }
 
         StatusText = "Document closed";
+    }
+
+    [RelayCommand]
+    private void NextTab()
+    {
+        if (Documents.Count <= 1 || ActiveDocument == null) return;
+
+        int currentIndex = Documents.IndexOf(ActiveDocument);
+        int nextIndex = (currentIndex + 1) % Documents.Count;
+        ActiveDocument = Documents[nextIndex];
+        SyncTopLevelWithActive();
+    }
+
+    [RelayCommand]
+    private void PreviousTab()
+    {
+        if (Documents.Count <= 1 || ActiveDocument == null) return;
+
+        int currentIndex = Documents.IndexOf(ActiveDocument);
+        int previousIndex = currentIndex - 1;
+        if (previousIndex < 0) previousIndex = Documents.Count - 1;
+        ActiveDocument = Documents[previousIndex];
+        SyncTopLevelWithActive();
+    }
+
+    [RelayCommand]
+    private void CloseActiveTab()
+    {
+        CloseDocument(ActiveDocument);
+    }
+
+    [RelayCommand]
+    private void CloseAllTabs()
+    {
+        // Close all but create a new one at the end
+        Documents.Clear();
+        ActiveDocument = null;
+        _ = NewFileAsync();
+        StatusText = "All tabs closed";
+    }
+
+    [RelayCommand]
+    private void CloseOtherTabs()
+    {
+        if (ActiveDocument == null) return;
+
+        var activeDoc = ActiveDocument;
+        Documents.Clear();
+        Documents.Add(activeDoc);
+        ActiveDocument = activeDoc;
+        SyncTopLevelWithActive();
+        StatusText = "Other tabs closed";
+    }
+
+    [RelayCommand]
+    private async Task OpenRecentFileAsync(string filePath)
+    {
+        await OpenFileFromPathAsync(filePath);
+    }
+
+    [RelayCommand]
+    private void ClearRecentFiles()
+    {
+        _recentFilesService.ClearRecentFiles();
+        LoadRecentFiles();
+        StatusText = "Recent files cleared";
+    }
+
+    [RelayCommand]
+    private async Task CopyHtmlToClipboardAsync()
+    {
+        if (ActiveDocument == null) return;
+
+        try
+        {
+            var markdown = ActiveDocument.EditorViewModel.Text;
+            var html = await (Application.Current as App)?.Services?.GetRequiredService<IMarkdownService>().RenderToHtmlAsync(markdown)!;
+
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+            {
+                var clipboard = desktop.MainWindow.Clipboard;
+                if (clipboard != null)
+                {
+                    await clipboard.SetTextAsync(html);
+                    StatusText = "HTML copied to clipboard";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Failed to copy HTML: {ex.Message}";
+        }
     }
 }

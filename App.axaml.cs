@@ -29,6 +29,7 @@ public partial class App : Application
         services.AddSingleton<IMarkdownService, MarkdownService>();
         services.AddSingleton<IFileService, FileService>();
         services.AddSingleton<IExportService, ExportService>();
+        services.AddSingleton<IRecentFilesService, RecentFilesService>();
 
         // ViewModels
         services.AddTransient<MainViewModel>();

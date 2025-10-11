@@ -54,6 +54,14 @@
             <Setter Property="Padding" Value="10,4"/>
             <Setter Property="Margin" Value="0,0,4,0"/>
             <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    <BrushTransition Property="Foreground" Duration="0:0:0.15"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.2"/>
+                    <ThicknessTransition Property="BorderThickness" Duration="0:0:0.2"/>
+                </Transitions>
+            </Setter>
         </Style>
 
         <Style Selector="TabItem:pointerover">
@@ -193,6 +201,58 @@
             <Setter Property="Background" Value="#F9F9F9"/>
             <Setter Property="BorderBrush" Value="#D0D0D0"/>
             <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <!-- Window Control Buttons -->
+        <Style Selector="Button#MinimizeButton, Button#MaximizeButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#2C3E50"/>
+        </Style>
+
+        <Style Selector="Button#MinimizeButton:pointerover, Button#MaximizeButton:pointerover">
+            <Setter Property="Background" Value="#E0E0E0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <Style Selector="Button#CloseButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#2C3E50"/>
+        </Style>
+
+        <Style Selector="Button#CloseButton:pointerover">
+            <Setter Property="Background" Value="#E81123"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <Style Selector="Button#CloseButton:pressed">
+            <Setter Property="Background" Value="#D00010"/>
+        </Style>
+
+        <!-- Panel Animations -->
+        <Style Selector="Panel">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.25"/>
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <Style Selector="StackPanel">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.25"/>
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <!-- Menu Animations -->
+        <Style Selector="MenuItem /template/ Popup">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
         </Style>
     </Application.Styles>
 </Application>

@@ -25,6 +25,28 @@ public partial class MainWindow : Window
             titleBar.PointerPressed += TitleBar_PointerPressed;
         }
 
+        // Window control buttons
+        var minimizeButton = this.FindControl<Button>("MinimizeButton");
+        if (minimizeButton != null)
+        {
+            minimizeButton.Click += (s, e) => WindowState = WindowState.Minimized;
+        }
+
+        var maximizeButton = this.FindControl<Button>("MaximizeButton");
+        if (maximizeButton != null)
+        {
+            maximizeButton.Click += (s, e) =>
+            {
+                WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+            };
+        }
+
+        var closeButton = this.FindControl<Button>("CloseButton");
+        if (closeButton != null)
+        {
+            closeButton.Click += (s, e) => Close();
+        }
+
         // Drag-and-drop support
         this.AddHandler(DragDrop.DragEnterEvent, OnDragOver);
         this.AddHandler(DragDrop.DragLeaveEvent, OnDragLeave);
