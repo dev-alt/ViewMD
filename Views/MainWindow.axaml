@@ -32,7 +32,7 @@
 
     <DockPanel>
         <!-- Title Bar with Hamburger Menu & Window Controls -->
-        <views:TitleBarView DockPanel.Dock="Top" DataContext="{Binding}" />
+        <views:TitleBarView DockPanel.Dock="Top" />
 
         <!-- Tabs Below Menu -->
         <Border DockPanel.Dock="Top" Background="#F8F9FA" BorderBrush="#E0E0E0" BorderThickness="0,1,0,1" Padding="4,2">
