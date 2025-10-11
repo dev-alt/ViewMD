@@ -18,8 +18,6 @@ public partial class TitleBarView : UserControl
 
     private void OnAttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
     {
-        Console.WriteLine("DEBUG: TitleBarView attached to visual tree");
-
         // Enable title bar dragging
         var titleBar = this.FindControl<Border>("TitleBar");
         if (titleBar != null)
@@ -27,74 +25,228 @@ public partial class TitleBarView : UserControl
             titleBar.PointerPressed += TitleBar_PointerPressed;
         }
 
-        // Debug hamburger menu
-        var hamburgerMenuItem = this.FindControl<MenuItem>("HamburgerMenuItem");
-        if (hamburgerMenuItem != null)
-        {
-            Console.WriteLine("DEBUG: Found HamburgerMenuItem");
-            hamburgerMenuItem.PointerPressed += (s, e) => Console.WriteLine("DEBUG: HamburgerMenuItem PointerPressed!");
-            hamburgerMenuItem.SubmenuOpened += (s, e) => Console.WriteLine("DEBUG: HamburgerMenuItem SubmenuOpened!");
-        }
-
-        // Debug menu item clicks
+        // File menu items - manually execute commands on PointerPressed
+        // (workaround for MenuItem Click event not firing on Windows)
         var newMenuItem = this.FindControl<MenuItem>("NewMenuItem");
         if (newMenuItem != null)
         {
-            Console.WriteLine($"DEBUG: Found NewMenuItem");
-            Console.WriteLine($"DEBUG: NewMenuItem.Command is null: {newMenuItem.Command == null}");
-            Console.WriteLine($"DEBUG: NewMenuItem.IsEnabled: {newMenuItem.IsEnabled}");
-            Console.WriteLine($"DEBUG: NewMenuItem.IsEffectivelyEnabled: {newMenuItem.IsEffectivelyEnabled}");
-
-            if (newMenuItem.Command != null)
-            {
-                Console.WriteLine($"DEBUG: NewMenuItem.Command.CanExecute(null): {newMenuItem.Command.CanExecute(null)}");
-            }
-
-            newMenuItem.Click += (s, e) =>
-            {
-                Console.WriteLine("DEBUG: NewMenuItem CLICKED!");
-            };
-
             newMenuItem.PointerPressed += (s, e) =>
             {
-                Console.WriteLine("DEBUG: NewMenuItem PointerPressed!");
-
-                // Try to manually execute the command
                 if (newMenuItem.Command != null && newMenuItem.Command.CanExecute(null))
                 {
-                    Console.WriteLine("DEBUG: Manually executing command!");
                     newMenuItem.Command.Execute(null);
                 }
-                else
-                {
-                    Console.WriteLine($"DEBUG: Command cannot execute! Command null: {newMenuItem.Command == null}, CanExecute: {newMenuItem.Command?.CanExecute(null)}");
-                }
             };
-        }
-        else
-        {
-            Console.WriteLine("DEBUG: NewMenuItem NOT found!");
         }
 
         var openMenuItem = this.FindControl<MenuItem>("OpenMenuItem");
         if (openMenuItem != null)
         {
-            Console.WriteLine($"DEBUG: Found OpenMenuItem");
-            Console.WriteLine($"DEBUG: OpenMenuItem.Command is null: {openMenuItem.Command == null}");
-
-            openMenuItem.Click += (s, e) =>
-            {
-                Console.WriteLine("DEBUG: OpenMenuItem CLICKED!");
-            };
-
             openMenuItem.PointerPressed += (s, e) =>
             {
-                Console.WriteLine("DEBUG: OpenMenuItem PointerPressed!");
+                if (openMenuItem.Command != null && openMenuItem.Command.CanExecute(null))
+                {
+                    openMenuItem.Command.Execute(null);
+                }
             };
         }
-        else
+
+        // Save commands
+        var saveMenuItem = this.FindControl<MenuItem>("SaveMenuItem");
+        if (saveMenuItem != null)
         {
-            Console.WriteLine("DEBUG: OpenMenuItem NOT found!");
+            saveMenuItem.PointerPressed += (s, e) =>
+            {
+                if (saveMenuItem.Command != null && saveMenuItem.Command.CanExecute(null))
+                {
+                    saveMenuItem.Command.Execute(null);
+                }
+            };
+        }
+
+        var saveAsMenuItem = this.FindControl<MenuItem>("SaveAsMenuItem");
+        if (saveAsMenuItem != null)
+        {
+            saveAsMenuItem.PointerPressed += (s, e) =>
+            {
+                if (saveAsMenuItem.Command != null && saveAsMenuItem.Command.CanExecute(null))
+                {
+                    saveAsMenuItem.Command.Execute(null);
+                }
+            };
+        }
+
+        var clearRecentMenuItem = this.FindControl<MenuItem>("ClearRecentMenuItem");
+        if (clearRecentMenuItem != null)
+        {
+            clearRecentMenuItem.PointerPressed += (s, e) =>
+            {
+                if (clearRecentMenuItem.Command != null && clearRecentMenuItem.Command.CanExecute(null))
+                {
+                    clearRecentMenuItem.Command.Execute(null);
+                }
+            };
+        }
+
+        // Editor commands
+        var boldMenuItem = this.FindControl<MenuItem>("BoldMenuItem");
+        if (boldMenuItem != null)
+        {
+            boldMenuItem.PointerPressed += (s, e) =>
+            {
+                if (boldMenuItem.Command != null && boldMenuItem.Command.CanExecute(null))
+                {
+                    boldMenuItem.Command.Execute(null);
+                }
+            };
+        }
+
+        var italicMenuItem = this.FindControl<MenuItem>("ItalicMenuItem");
+        if (italicMenuItem != null)
+        {
+            italicMenuItem.PointerPressed += (s, e) =>
+            {
+                if (italicMenuItem.Command != null && italicMenuItem.Command.CanExecute(null))
+                {
+                    italicMenuItem.Command.Execute(null);
+                }
+            };
+        }
+
+        var linkMenuItem = this.FindControl<MenuItem>("LinkMenuItem");
+        if (linkMenuItem != null)
+        {
+            linkMenuItem.PointerPressed += (s, e) =>
+            {
+                if (linkMenuItem.Command != null && linkMenuItem.Command.CanExecute(null))
+                {
+                    linkMenuItem.Command.Execute(null);
+                }
+            };
+        }
+
+        var imageMenuItem = this.FindControl<MenuItem>("ImageMenuItem");
+        if (imageMenuItem != null)
+        {
+            imageMenuItem.PointerPressed += (s, e) =>
+            {
+                if (imageMenuItem.Command != null && imageMenuItem.Command.CanExecute(null))
+                {
+                    imageMenuItem.Command.Execute(null);
+                }
+            };
+        }
+
+        var codeBlockMenuItem = this.FindControl<MenuItem>("CodeBlockMenuItem");
+        if (codeBlockMenuItem != null)
+        {
+            codeBlockMenuItem.PointerPressed += (s, e) =>
+            {
+                if (codeBlockMenuItem.Command != null && codeBlockMenuItem.Command.CanExecute(null))
+                {
+                    codeBlockMenuItem.Command.Execute(null);
+                }
+            };
+        }
+
+        var tableMenuItem = this.FindControl<MenuItem>("TableMenuItem");
+        if (tableMenuItem != null)
+        {
+            tableMenuItem.PointerPressed += (s, e) =>
+            {
+                if (tableMenuItem.Command != null && tableMenuItem.Command.CanExecute(null))
+                {
+                    tableMenuItem.Command.Execute(null);
+                }
+            };
+        }
+
+        // View commands
+        var toggleReadModeMenuItem = this.FindControl<MenuItem>("ToggleReadModeMenuItem");
+        if (toggleReadModeMenuItem != null)
+        {
+            toggleReadModeMenuItem.PointerPressed += (s, e) =>
+            {
+                if (toggleReadModeMenuItem.Command != null && toggleReadModeMenuItem.Command.CanExecute(null))
+                {
+                    toggleReadModeMenuItem.Command.Execute(null);
+                }
+            };
+        }
+
+        // Tab commands
+        var closeTabMenuItem = this.FindControl<MenuItem>("CloseTabMenuItem");
+        if (closeTabMenuItem != null)
+        {
+            closeTabMenuItem.PointerPressed += (s, e) =>
+            {
+                if (closeTabMenuItem.Command != null && closeTabMenuItem.Command.CanExecute(null))
+                {
+                    closeTabMenuItem.Command.Execute(null);
+                }
+            };
+        }
+
+        var closeOtherTabsMenuItem = this.FindControl<MenuItem>("CloseOtherTabsMenuItem");
+        if (closeOtherTabsMenuItem != null)
+        {
+            closeOtherTabsMenuItem.PointerPressed += (s, e) =>
+            {
+                if (closeOtherTabsMenuItem.Command != null && closeOtherTabsMenuItem.Command.CanExecute(null))
+                {
+                    closeOtherTabsMenuItem.Command.Execute(null);
+                }
+            };
+        }
+
+        var closeAllTabsMenuItem = this.FindControl<MenuItem>("CloseAllTabsMenuItem");
+        if (closeAllTabsMenuItem != null)
+        {
+            closeAllTabsMenuItem.PointerPressed += (s, e) =>
+            {
+                if (closeAllTabsMenuItem.Command != null && closeAllTabsMenuItem.Command.CanExecute(null))
+                {
+                    closeAllTabsMenuItem.Command.Execute(null);
+                }
+            };
+        }
+
+        // Export commands
+        var copyHtmlMenuItem = this.FindControl<MenuItem>("CopyHtmlMenuItem");
+        if (copyHtmlMenuItem != null)
+        {
+            copyHtmlMenuItem.PointerPressed += (s, e) =>
+            {
+                if (copyHtmlMenuItem.Command != null && copyHtmlMenuItem.Command.CanExecute(null))
+                {
+                    copyHtmlMenuItem.Command.Execute(null);
+                }
+            };
+        }
+
+        var exportHtmlMenuItem = this.FindControl<MenuItem>("ExportHtmlMenuItem");
+        if (exportHtmlMenuItem != null)
+        {
+            exportHtmlMenuItem.PointerPressed += (s, e) =>
+            {
+                if (exportHtmlMenuItem.Command != null && exportHtmlMenuItem.Command.CanExecute(null))
+                {
+                    exportHtmlMenuItem.Command.Execute(null);
+                }
+            };
+        }
+
+        // Exit command
+        var exitMenuItem = this.FindControl<MenuItem>("ExitMenuItem");
+        if (exitMenuItem != null)
+        {
+            exitMenuItem.PointerPressed += (s, e) =>
+            {
+                if (exitMenuItem.Command != null && exitMenuItem.Command.CanExecute(null))
+                {
+                    exitMenuItem.Command.Execute(null);
+                }
+            };
         }
 
         // Window control buttons
@@ -118,9 +270,6 @@ public partial class TitleBarView : UserControl
         {
             closeButton.Click += (_, _) => windowClose.Close();
         }
-
-        // Debug DataContext
-        Console.WriteLine($"DEBUG: TitleBarView DataContext type: {DataContext?.GetType().Name ?? "null"}");
     }
 
     private void TitleBar_PointerPressed(object? sender, PointerPressedEventArgs e)
