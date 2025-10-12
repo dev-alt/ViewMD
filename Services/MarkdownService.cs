@@ -11,21 +11,28 @@ public class MarkdownService : IMarkdownService
     public MarkdownService()
     {
         _pipeline = new MarkdownPipelineBuilder()
-            .UseAdvancedExtensions()
-            .UseEmojiAndSmiley()
-            .UseAutoLinks()
-            .UseGenericAttributes()
-            .UseDefinitionLists()
-            .UseFootnotes()
-            .UseAbbreviations()
-            .UsePipeTables()
-            .UseGridTables()
-            .UseTaskLists()
-            .UseAutoIdentifiers()
-            .UseMediaLinks()
-            .UseSmartyPants()
-            .UseMathematics()
-            .UseDiagrams()
+            .UseAdvancedExtensions()  // Includes most GFM features
+            .UseEmojiAndSmiley()       // :emoji: syntax
+            .UseAutoLinks()            // Auto-detect URLs
+            .UseGenericAttributes()    // {#id .class} syntax
+            .UseDefinitionLists()      // Term : Definition
+            .UseFootnotes()            // [^1] references
+            .UseAbbreviations()        // *[HTML]: Full name
+            .UsePipeTables()           // | tables |
+            .UseGridTables()           // +---+---+ tables
+            .UseTaskLists()            // - [ ] and - [x]
+            .UseAutoIdentifiers()      // Auto-generate heading IDs
+            .UseMediaLinks()           // Audio/video support
+            .UseSmartyPants()          // Smart quotes and dashes
+            .UseMathematics()          // $math$ and $$math$$
+            .UseDiagrams()             // Mermaid diagrams
+            .UseYamlFrontMatter()      // --- metadata ---
+            .UseEmphasisExtras()       // ^super^, ~sub~, ==mark==, ++ins++
+            .UseCustomContainers()     // ::: note ::: for callouts/alerts
+            .UseFigures()              // ^^ caption syntax
+            .UseCitations()            // [@ref] citations
+            // Note: GitHub-style alerts (> [!NOTE]) require Markdig 0.38+
+            // Currently using custom containers (::: note :::) as alternative
             .Build();
     }
 
@@ -44,12 +51,13 @@ public class MarkdownService : IMarkdownService
 
     public string GeneratePreviewHtml(string markdownHtml, bool isDarkTheme)
     {
-        var theme = "light";
-        var bgColor = "#ffffff";
-        var textColor = "#000000";
-        var borderColor = "#e0e0e0";
-        var codeBlockBg = "#f5f5f5";
-        var linkColor = "#0066cc";
+        var theme = isDarkTheme ? "dark" : "light";
+        var bgColor = isDarkTheme ? "#1e1e1e" : "#ffffff";
+        var textColor = isDarkTheme ? "#e0e0e0" : "#000000";
+        var borderColor = isDarkTheme ? "#404040" : "#e0e0e0";
+        var codeBlockBg = isDarkTheme ? "#2d2d2d" : "#f5f5f5";
+        var linkColor = isDarkTheme ? "#58a6ff" : "#0066cc";
+        var mutedTextColor = isDarkTheme ? "#888888" : "#6a737d";
 
         return $@"<!DOCTYPE html>
 <html>
@@ -223,6 +231,129 @@ public class MarkdownService : IMarkdownService
 
         del {{
             text-decoration: line-through;
+        }}
+
+        /* Superscript and subscript */
+        sup, sub {{
+            font-size: 0.75em;
+            line-height: 0;
+            position: relative;
+            vertical-align: baseline;
+        }}
+
+        sup {{
+            top: -0.5em;
+        }}
+
+        sub {{
+            bottom: -0.25em;
+        }}
+
+        /* Inserted text */
+        ins {{
+            text-decoration: underline;
+            text-decoration-color: {linkColor};
+            text-decoration-thickness: 2px;
+        }}
+
+        /* Figures and captions */
+        figure {{
+            margin: 1.5rem 0;
+            text-align: center;
+        }}
+
+        figure img {{
+            display: inline-block;
+            margin: 0.5rem auto;
+        }}
+
+        figcaption {{
+            font-size: 0.9em;
+            color: {mutedTextColor};
+            font-style: italic;
+            margin-top: 0.5rem;
+        }}
+
+        /* Definition lists */
+        dl {{
+            margin-bottom: 16px;
+        }}
+
+        dt {{
+            font-weight: 600;
+            margin-top: 16px;
+            font-size: 1em;
+        }}
+
+        dd {{
+            margin-left: 2em;
+            margin-bottom: 8px;
+            color: {mutedTextColor};
+        }}
+
+        /* Custom containers */
+        .custom-container {{
+            padding: 1rem;
+            margin: 1rem 0;
+            border-left: 4px solid {borderColor};
+            background-color: {codeBlockBg};
+            border-radius: 4px;
+        }}
+
+        .custom-container.note {{
+            border-left-color: #0969da;
+            background-color: {(isDarkTheme ? "#1f2d3d" : "#ddf4ff")};
+        }}
+
+        .custom-container.tip {{
+            border-left-color: #1a7f37;
+            background-color: {(isDarkTheme ? "#1f2d24" : "#d1f5d3")};
+        }}
+
+        .custom-container.important {{
+            border-left-color: #8250df;
+            background-color: {(isDarkTheme ? "#2d2440" : "#f0e7ff")};
+        }}
+
+        .custom-container.warning {{
+            border-left-color: #d29922;
+            background-color: {(isDarkTheme ? "#3d2f1f" : "#fff8dc")};
+        }}
+
+        .custom-container.caution {{
+            border-left-color: #cf222e;
+            background-color: {(isDarkTheme ? "#3d1f24" : "#ffe8ea")};
+        }}
+
+        /* Citations */
+        .citation {{
+            font-size: 0.9em;
+            color: {linkColor};
+            text-decoration: none;
+            vertical-align: super;
+        }}
+
+        .citation:hover {{
+            text-decoration: underline;
+        }}
+
+        /* Footnotes section */
+        .footnotes {{
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid {borderColor};
+            font-size: 0.9em;
+        }}
+
+        .footnotes ol {{
+            padding-left: 1.5rem;
+        }}
+
+        /* Abbreviations */
+        abbr[title] {{
+            text-decoration: underline dotted;
+            cursor: help;
+            border-bottom: 1px dotted {mutedTextColor};
         }}
 
         /* Mermaid diagrams */
