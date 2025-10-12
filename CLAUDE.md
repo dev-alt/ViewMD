@@ -138,4 +138,9 @@ Theme state is maintained at both the `MainViewModel` level and per-`DocumentVie
 
 4. **File paths in arguments** - The app normalizes both plain paths and `file://` URIs. Windows file associations may pass either format.
 
-5. **IsDirty tracking** - Currently tracked per document but confirmation dialogs are TODO (see `MainViewModel:47-50`, `63-67`, `183-187`, `207-211`).
+5. **IsDirty tracking** - Fully implemented with confirmation dialogs for unsaved changes. Dialogs appear when:
+   - Opening a new file with unsaved changes (`MainViewModel.OpenFile()`)
+   - Creating a new file with unsaved changes (`MainViewModel.NewFile()`)
+   - Closing a document with unsaved changes (`MainViewModel.CloseDocument()`)
+   - Exiting the application with any unsaved documents (`MainViewModel.Exit()`)
+   - Opening a file from path with unsaved changes (`MainViewModel.OpenFileFromPathAsync()`)
