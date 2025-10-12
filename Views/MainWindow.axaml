@@ -28,6 +28,8 @@
         <KeyBinding Gesture="Ctrl+Shift+W" Command="{Binding CloseAllTabsCommand}"/>
         <!-- Copy HTML -->
         <KeyBinding Gesture="Ctrl+Shift+H" Command="{Binding CopyHtmlToClipboardCommand}"/>
+        <!-- Theme Toggle -->
+        <KeyBinding Gesture="Ctrl+Shift+T" Command="{Binding ToggleThemeCommand}"/>
     </Window.KeyBindings>
 
     <DockPanel>

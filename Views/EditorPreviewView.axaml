@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:MarkdownViewer.ViewModels"
              xmlns:conv="using:MarkdownViewer.Converters"
+             xmlns:controls="using:MarkdownViewer.Controls"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="650"
              x:Class="MarkdownViewer.Views.EditorPreviewView"
              x:DataType="vm:DocumentViewModel">
@@ -11,20 +12,10 @@
     <Grid RowDefinitions="0,*" ColumnDefinitions="*,5,*">
         <!-- Editor Panel -->
         <Border Grid.Row="1" Grid.Column="0" BorderThickness="0,0,1,0" Name="EditorBorder" IsVisible="{Binding IsReadMode, Converter={x:Static conv:BoolNotConverter.Instance}}">
-            <TextBox
+            <controls:LineNumberedTextEditor
                 Name="MarkdownEditor"
-                FontFamily="Consolas,Courier New,monospace"
-                FontSize="14"
-                AcceptsReturn="True"
-                AcceptsTab="True"
-                TextWrapping="Wrap"
-                BorderThickness="0"
-                VerticalAlignment="Stretch"
-                HorizontalAlignment="Stretch"
-                VerticalContentAlignment="Top"
-                Padding="10"
-                IsReadOnly="{Binding IsReadMode}"
-                Text="# Start Typing Your Markdown Here!&#x0A;&#x0A;Try:&#x0A;- **Bold text**&#x0A;- *Italic text*&#x0A;- Lists and more&#x0A;&#x0A;Press Ctrl+Shift+T to toggle dark mode"/>
+                Text="# Start Typing Your Markdown Here!&#x0A;&#x0A;Try:&#x0A;- **Bold text**&#x0A;- *Italic text*&#x0A;- Lists and more&#x0A;&#x0A;Press Ctrl+Shift+T to toggle dark mode"
+                ShowLineNumbers="{Binding EditorViewModel.ShowLineNumbers}"/>
         </Border>
 
         <!-- Splitter -->

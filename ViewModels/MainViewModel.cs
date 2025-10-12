@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -27,6 +28,7 @@ public partial class MainViewModel : ViewModelBase
     private readonly IFileService _fileService;
     private readonly IExportService _exportService;
     private readonly IRecentFilesService _recentFilesService;
+    private readonly IDialogService _dialogService;
 
     internal IFileService FileService => _fileService;
     internal IExportService ExportService => _exportService;
@@ -44,18 +46,21 @@ public partial class MainViewModel : ViewModelBase
         _fileService = null!;
         _exportService = null!;
         _recentFilesService = null!;
+        _dialogService = null!;
     }
 
     public MainViewModel(
         IFileService fileService,
         IExportService exportService,
         IRecentFilesService recentFilesService,
+        IDialogService dialogService,
         EditorViewModel editorViewModel,
         PreviewViewModel previewViewModel)
     {
         _fileService = fileService;
         _exportService = exportService;
         _recentFilesService = recentFilesService;
+        _dialogService = dialogService;
         _editorViewModel = editorViewModel;
         _previewViewModel = previewViewModel;
         _currentDocument = new MarkdownDocument();
@@ -63,8 +68,8 @@ public partial class MainViewModel : ViewModelBase
         // Load recent files
         LoadRecentFiles();
 
-        // Initialize with one tab
-        NewFile();
+        // Initialize with one tab (fire-and-forget for constructor)
+        _ = NewFile();
     }
 
     internal void LoadRecentFiles()
@@ -85,9 +90,16 @@ public partial class MainViewModel : ViewModelBase
     {
         if (string.IsNullOrEmpty(path)) return;
 
-        if (IsDirty)
+        if (ActiveDocument?.IsDirty == true)
         {
-            // TODO: Show confirmation dialog before discarding unsaved changes
+            var result = await _dialogService.ShowConfirmationAsync(
+                "Unsaved Changes",
+                $"The document '{ActiveDocument.Title}' has unsaved changes. Do you want to discard them?");
+
+            if (!result)
+            {
+                return; // User chose not to discard changes
+            }
         }
 
         var document = await _fileService.OpenFileAsync(path);
@@ -140,14 +152,20 @@ public partial class MainViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public void CloseDocument(DocumentViewModel? document)
+    public async Task CloseDocument(DocumentViewModel? document)
     {
         if (document == null) return;
 
-        // TODO: Show confirmation dialog if dirty
         if (document.IsDirty)
         {
-            // For now, just close it
+            var result = await _dialogService.ShowConfirmationAsync(
+                "Unsaved Changes",
+                $"The document '{document.Title}' has unsaved changes. Do you want to close without saving?");
+
+            if (!result)
+            {
+                return; // User chose not to close
+            }
         }
 
         Documents.Remove(document);
@@ -162,7 +180,7 @@ public partial class MainViewModel : ViewModelBase
         // If no documents remain, create a new one
         if (Documents.Count == 0)
         {
-            NewFile();
+            _ = NewFile();
         }
 
         StatusText = "Document closed";
@@ -170,11 +188,18 @@ public partial class MainViewModel : ViewModelBase
 
     // File Operations
     [RelayCommand]
-    public void NewFile()
+    public async Task NewFile()
     {
-        if (IsDirty)
+        if (ActiveDocument?.IsDirty == true)
         {
-            // TODO: Show confirmation dialog
+            var result = await _dialogService.ShowConfirmationAsync(
+                "Unsaved Changes",
+                $"The document '{ActiveDocument.Title}' has unsaved changes. Do you want to create a new file anyway?");
+
+            if (!result)
+            {
+                return; // User chose not to create new file
+            }
         }
 
         var docVm = CreateDocumentViewModel();
@@ -188,9 +213,16 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     private async Task OpenFile()
     {
-        if (IsDirty)
+        if (ActiveDocument?.IsDirty == true)
         {
-            // TODO: Show confirmation dialog
+            var confirmResult = await _dialogService.ShowConfirmationAsync(
+                "Unsaved Changes",
+                $"The document '{ActiveDocument.Title}' has unsaved changes. Do you want to open a new file anyway?");
+
+            if (!confirmResult)
+            {
+                return; // User chose not to open new file
+            }
         }
 
         var openDlg = ShowOpenFileDialogAsync;
@@ -307,11 +339,18 @@ public partial class MainViewModel : ViewModelBase
         ActiveDocument.IsReadMode = !ActiveDocument.IsReadMode;
     }
 
+    [RelayCommand]
+    private void ToggleTheme()
+    {
+        if (ActiveDocument == null) return;
+        ActiveDocument.IsDarkTheme = !ActiveDocument.IsDarkTheme;
+    }
+
     // Tab Management
     [RelayCommand]
     private void CloseActiveTab()
     {
-        CloseDocument(ActiveDocument);
+        _ = CloseDocument(ActiveDocument);
     }
 
     [RelayCommand]
@@ -333,7 +372,7 @@ public partial class MainViewModel : ViewModelBase
         // Close all but create a new one at the end
         Documents.Clear();
         ActiveDocument = null;
-        NewFile();
+        _ = NewFile();
         StatusText = "All tabs closed";
     }
 
@@ -404,12 +443,27 @@ public partial class MainViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void Exit()
+    private async Task Exit()
     {
-        if (IsDirty)
+        // Check if any documents have unsaved changes
+        var dirtyDocuments = Documents.Where(d => d.IsDirty).ToList();
+
+        if (dirtyDocuments.Any())
         {
-            // TODO: Show confirmation dialog
+            var message = dirtyDocuments.Count == 1
+                ? $"The document '{dirtyDocuments[0].Title}' has unsaved changes. Do you want to exit anyway?"
+                : $"{dirtyDocuments.Count} documents have unsaved changes. Do you want to exit anyway?";
+
+            var result = await _dialogService.ShowConfirmationAsync(
+                "Unsaved Changes",
+                message);
+
+            if (!result)
+            {
+                return; // User chose not to exit
+            }
         }
+
         Environment.Exit(0);
     }
 

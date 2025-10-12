@@ -5,9 +5,12 @@ using Avalonia.Threading;
 using Avalonia.Media;
 using Avalonia.Layout;
 using MarkdownViewer.ViewModels;
+using MarkdownViewer.Controls;
+using MarkdownViewer.Services;
 using Markdig;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
+using Markdig.Extensions.TaskLists;
 using System;
 using System.Linq;
 using System.Text;
@@ -16,7 +19,7 @@ namespace MarkdownViewer.Views;
 
 public partial class EditorPreviewView : UserControl
 {
-    private TextBox? _editor;
+    private LineNumberedTextEditor? _editor;
     private StackPanel? _previewContentRight;
     private StackPanel? _previewContentFull;
     private Border? _editorBorder;
@@ -38,7 +41,7 @@ public partial class EditorPreviewView : UserControl
     private void InitializeComponent()
     {
         AvaloniaXamlLoader.Load(this);
-        _editor = this.FindControl<TextBox>("MarkdownEditor");
+        _editor = this.FindControl<LineNumberedTextEditor>("MarkdownEditor");
         _previewContentRight = this.FindControl<StackPanel>("PreviewContentRight");
         _previewContentFull = this.FindControl<StackPanel>("PreviewContentFull");
         _editorBorder = this.FindControl<Border>("EditorBorder");
@@ -54,12 +57,9 @@ public partial class EditorPreviewView : UserControl
         if (_editor == null) return;
 
         // Subscribe to text changes
-        _editor.PropertyChanged += (_, e) =>
+        _editor.TextChanged += (_, text) =>
         {
-            if (e.Property.Name == nameof(TextBox.Text))
-            {
-                OnEditorTextChanged();
-            }
+            OnEditorTextChanged();
         };
 
         // Focus the editor
@@ -79,7 +79,7 @@ public partial class EditorPreviewView : UserControl
             {
                 var text = _editor.Text ?? string.Empty;
                 await vm.PreviewViewModel.UpdatePreviewAsync(text);
-                UpdatePreview(text, vm.IsReadMode);
+                UpdatePreview(text, vm.IsReadMode, vm.IsDarkTheme);
             }
         };
     }
@@ -111,7 +111,18 @@ public partial class EditorPreviewView : UserControl
             {
                 if (args.PropertyName == nameof(vm.IsReadMode) && _editor != null)
                 {
-                    UpdatePreview(_editor.Text ?? string.Empty, vm.IsReadMode);
+                    UpdatePreview(_editor.Text ?? string.Empty, vm.IsReadMode, vm.IsDarkTheme);
+                }
+                else if (args.PropertyName == nameof(vm.IsDarkTheme))
+                {
+                    // Apply theme to editor and preview
+                    if (vm.IsDarkTheme)
+                        ApplyDarkTheme();
+                    else
+                        ApplyLightTheme();
+
+                    if (_editor != null)
+                        UpdatePreview(_editor.Text ?? string.Empty, vm.IsReadMode, vm.IsDarkTheme);
                 }
             };
 
@@ -122,10 +133,15 @@ public partial class EditorPreviewView : UserControl
                 {
                     _editor.Text = vm.EditorViewModel.Text;
                 }
-                ApplyLightTheme();
+
+                // Apply appropriate theme
+                if (vm.IsDarkTheme)
+                    ApplyDarkTheme();
+                else
+                    ApplyLightTheme();
 
                 // Trigger initial preview
-                UpdatePreview(_editor.Text ?? string.Empty, vm.IsReadMode);
+                UpdatePreview(_editor.Text ?? string.Empty, vm.IsReadMode, vm.IsDarkTheme);
 
                 // Focus the editor
                 Dispatcher.UIThread.Post(() => _editor.Focus(), DispatcherPriority.Background);
@@ -149,29 +165,18 @@ public partial class EditorPreviewView : UserControl
     {
         if (_editor == null) return;
 
-        var currentText = _editor.Text ?? string.Empty;
         var caretIndex = _editor.CaretIndex;
-
-        // Insert text at caret position
-        _editor.Text = currentText.Insert(caretIndex, text);
-
-        // Move caret after inserted text
-        _editor.CaretIndex = caretIndex + text.Length;
+        _editor.InsertText(text, caretIndex);
         _editor.Focus();
     }
 
     private void ApplyLightTheme()
     {
-        if (_editor == null) return;
-
-        _editor.Background = Brushes.White;
-        _editor.Foreground = Brushes.Black;
+        // Apply theme to editor
+        _editor?.ApplyLightTheme();
 
         if (_editorBorder != null)
-        {
-            _editorBorder.Background = Brushes.White;
             _editorBorder.BorderBrush = new SolidColorBrush(Color.Parse("#E0E0E0"));
-        }
         if (_previewBorderRight != null)
             _previewBorderRight.Background = Brushes.White;
         if (_previewBorderFull != null)
@@ -184,10 +189,30 @@ public partial class EditorPreviewView : UserControl
             _placeholderFull.Foreground = new SolidColorBrush(Color.Parse("#999999"));
     }
 
-    private void UpdatePreview(string markdownText, bool isReadMode)
+    public void ApplyDarkTheme()
+    {
+        // Apply theme to editor
+        _editor?.ApplyDarkTheme();
+
+        if (_editorBorder != null)
+            _editorBorder.BorderBrush = new SolidColorBrush(Color.Parse("#C0C0C0"));
+        // Preview can be dark in dark mode
+        if (_previewBorderRight != null)
+            _previewBorderRight.Background = new SolidColorBrush(Color.Parse("#1E1E1E"));
+        if (_previewBorderFull != null)
+            _previewBorderFull.Background = new SolidColorBrush(Color.Parse("#1E1E1E"));
+        if (_splitter != null)
+            _splitter.Background = new SolidColorBrush(Color.Parse("#404040"));
+        if (_placeholderRight != null)
+            _placeholderRight.Foreground = new SolidColorBrush(Color.Parse("#999999"));
+        if (_placeholderFull != null)
+            _placeholderFull.Foreground = new SolidColorBrush(Color.Parse("#999999"));
+    }
+
+    private void UpdatePreview(string markdownText, bool isReadMode, bool isDarkTheme = false)
     {
         var target = isReadMode ? _previewContentFull : _previewContentRight;
-        if (target == null || markdownText == _lastRenderedText)
+        if (target == null)
             return;
 
         _lastRenderedText = markdownText;
@@ -217,7 +242,7 @@ public partial class EditorPreviewView : UserControl
         // Render each block element
         foreach (var block in document)
         {
-            var element = RenderBlock(block);
+            var element = RenderBlock(block, isDarkTheme);
             if (element != null)
             {
                 target.Children.Add(element);
@@ -225,29 +250,30 @@ public partial class EditorPreviewView : UserControl
         }
     }
 
-    private Control? RenderBlock(Block block)
+    private Control? RenderBlock(Block block, bool isDarkTheme)
     {
-        var textColor = Color.Parse("#333333");
-        var mutedColor = Color.Parse("#666666");
+        var textColor = isDarkTheme ? Color.Parse("#E0E0E0") : Color.Parse("#333333");
+        var mutedColor = isDarkTheme ? Color.Parse("#888888") : Color.Parse("#666666");
 
         return block switch
         {
-            HeadingBlock heading => RenderHeading(heading, textColor),
+            HeadingBlock heading => RenderHeading(heading, textColor, isDarkTheme),
             ParagraphBlock paragraph => RenderParagraph(paragraph, textColor),
-            CodeBlock codeBlock => RenderCodeBlock(codeBlock),
-            ListBlock list => RenderList(list, textColor),
-            QuoteBlock quote => RenderQuote(quote, textColor),
+            CodeBlock codeBlock => RenderCodeBlock(codeBlock, isDarkTheme),
+            ListBlock list => RenderList(list, textColor, isDarkTheme),
+            QuoteBlock quote => RenderQuote(quote, textColor, isDarkTheme),
             ThematicBreakBlock => new Border
             {
                 Height = 1,
                 Background = new SolidColorBrush(mutedColor),
                 Margin = new Thickness(0, 10, 0, 10)
             },
+            Markdig.Extensions.Tables.Table table => RenderTable(table, textColor, isDarkTheme),
             _ => null
         };
     }
 
-    private Control RenderHeading(HeadingBlock heading, Color textColor)
+    private Control RenderHeading(HeadingBlock heading, Color textColor, bool isDarkTheme)
     {
         var text = ExtractText(heading.Inline);
         var fontSize = heading.Level switch
@@ -270,14 +296,14 @@ public partial class EditorPreviewView : UserControl
             Margin = new Thickness(0, heading.Level == 1 ? 10 : 8, 0, 6)
         };
 
-        if (heading.Level == 1)
+        if (heading.Level == 1 || heading.Level == 2)
         {
             var panel = new StackPanel { Spacing = 4 };
             panel.Children.Add(textBlock);
             panel.Children.Add(new Border
             {
-                Height = 2,
-                Background = new SolidColorBrush(textColor),
+                Height = heading.Level == 1 ? 2 : 1,
+                Background = new SolidColorBrush(isDarkTheme ? Color.Parse("#404040") : Color.Parse("#E0E0E0")),
                 Margin = new Thickness(0, 0, 0, 8)
             });
             return panel;
@@ -288,9 +314,86 @@ public partial class EditorPreviewView : UserControl
 
     private Control RenderParagraph(ParagraphBlock paragraph, Color textColor)
     {
+        // Check if this paragraph contains only an image
+        if (paragraph.Inline?.FirstChild is LinkInline { IsImage: true } singleImage && paragraph.Inline.Count() == 1)
+        {
+            return RenderImage(singleImage);
+        }
+
         var panel = new WrapPanel { Margin = new Thickness(0, 0, 0, 10) };
         RenderInlines(panel, paragraph.Inline, textColor);
         return panel;
+    }
+
+    private Control RenderImage(LinkInline imageLink)
+    {
+        if (string.IsNullOrEmpty(imageLink.Url))
+        {
+            return new Border
+            {
+                BorderBrush = new SolidColorBrush(Color.Parse("#E0E0E0")),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(16),
+                Margin = new Thickness(0, 0, 0, 10),
+                Child = new TextBlock
+                {
+                    Text = "🖼️ Image: (No URL provided)",
+                    FontStyle = FontStyle.Italic,
+                    Foreground = new SolidColorBrush(Color.Parse("#888888"))
+                }
+            };
+        }
+
+        try
+        {
+            var image = new Avalonia.Controls.Image
+            {
+                Source = new Avalonia.Media.Imaging.Bitmap(imageLink.Url),
+                Margin = new Thickness(0, 8, 0, 8),
+                MaxWidth = 800,
+                Stretch = Avalonia.Media.Stretch.Uniform
+            };
+
+            var border = new Border
+            {
+                Child = image,
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+
+            if (!string.IsNullOrEmpty(imageLink.Title))
+            {
+                var stack = new StackPanel { Spacing = 4 };
+                stack.Children.Add(border);
+                stack.Children.Add(new TextBlock
+                {
+                    Text = imageLink.Title,
+                    FontStyle = FontStyle.Italic,
+                    FontSize = 12,
+                    Foreground = new SolidColorBrush(Color.Parse("#888888")),
+                    HorizontalAlignment = HorizontalAlignment.Center
+                });
+                return stack;
+            }
+
+            return border;
+        }
+        catch
+        {
+            // If image fails to load, show placeholder
+            return new Border
+            {
+                BorderBrush = new SolidColorBrush(Color.Parse("#E0E0E0")),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(16),
+                Margin = new Thickness(0, 0, 0, 10),
+                Child = new TextBlock
+                {
+                    Text = $"🖼️ Image: {imageLink.Url}\n(Unable to load)",
+                    FontStyle = FontStyle.Italic,
+                    Foreground = new SolidColorBrush(Color.Parse("#888888"))
+                }
+            };
+        }
     }
 
     private void RenderInlines(WrapPanel panel, ContainerInline? inline, Color textColor)
@@ -307,6 +410,44 @@ public partial class EditorPreviewView : UserControl
                         FontSize = 14,
                         Foreground = new SolidColorBrush(textColor)
                     });
+                    break;
+                case LinkInline link when link.IsImage:
+                    // Inline images render as small images
+                    if (!string.IsNullOrEmpty(link.Url))
+                    {
+                        try
+                        {
+                            var inlineImage = new Avalonia.Controls.Image
+                            {
+                                Source = new Avalonia.Media.Imaging.Bitmap(link.Url),
+                                Height = 24,
+                                Margin = new Thickness(0, 0, 4, 0),
+                                Stretch = Avalonia.Media.Stretch.Uniform,
+                                VerticalAlignment = VerticalAlignment.Center
+                            };
+                            panel.Children.Add(inlineImage);
+                        }
+                        catch
+                        {
+                            panel.Children.Add(new SelectableTextBlock
+                            {
+                                Text = $"[Image: {link.Url}]",
+                                FontSize = 14,
+                                Foreground = new SolidColorBrush(Color.Parse("#888888")),
+                                FontStyle = FontStyle.Italic
+                            });
+                        }
+                    }
+                    else
+                    {
+                        panel.Children.Add(new SelectableTextBlock
+                        {
+                            Text = "[Image: No URL]",
+                            FontSize = 14,
+                            Foreground = new SolidColorBrush(Color.Parse("#888888")),
+                            FontStyle = FontStyle.Italic
+                        });
+                    }
                     break;
                 case LinkInline link:
                     var linkButton = new HyperlinkButton
@@ -363,7 +504,7 @@ public partial class EditorPreviewView : UserControl
         }
     }
 
-    private Control RenderCodeBlock(CodeBlock codeBlock)
+    private Control RenderCodeBlock(CodeBlock codeBlock, bool isDarkTheme)
     {
         var code = new StringBuilder();
         foreach (var line in codeBlock.Lines)
@@ -371,57 +512,111 @@ public partial class EditorPreviewView : UserControl
             code.AppendLine(line.ToString());
         }
 
-        var bgColor = Color.Parse("#F5F5F5");
-        var textColor = Color.Parse("#333333");
+        var bgColor = isDarkTheme ? Color.Parse("#2D2D2D") : Color.Parse("#F5F5F5");
+        var borderColor = isDarkTheme ? Color.Parse("#404040") : Color.Parse("#E0E0E0");
+
+        // Get language from fence code block info
+        string? language = null;
+        if (codeBlock is Markdig.Syntax.FencedCodeBlock fencedBlock)
+        {
+            language = fencedBlock.Info;
+        }
+
+        // Use syntax highlighter if language is specified
+        var content = SyntaxHighlighter.CreateHighlightedBlock(code.ToString().TrimEnd(), language, isDarkTheme);
 
         return new Border
         {
             Background = new SolidColorBrush(bgColor),
-            BorderBrush = new SolidColorBrush(Color.Parse("#E0E0E0")),
+            BorderBrush = new SolidColorBrush(borderColor),
             BorderThickness = new Thickness(1),
             CornerRadius = new CornerRadius(4),
             Padding = new Thickness(12),
             Margin = new Thickness(0, 0, 0, 10),
-            Child = new SelectableTextBlock
-            {
-                Text = code.ToString().TrimEnd(),
-                FontFamily = new FontFamily("Consolas,Courier New,monospace"),
-                FontSize = 13,
-                Foreground = new SolidColorBrush(textColor),
-                TextWrapping = TextWrapping.NoWrap
-            }
+            Child = content
         };
     }
 
-    private Control RenderList(ListBlock list, Color textColor)
+    private Control RenderList(ListBlock list, Color textColor, bool isDarkTheme)
     {
         var panel = new StackPanel { Spacing = 4, Margin = new Thickness(0, 0, 0, 10) };
 
         int itemNumber = 1;
         foreach (var item in list.OfType<ListItemBlock>())
         {
+            // Check if this is a task list item
+            var taskListItem = item.Descendants<TaskList>().FirstOrDefault();
+
             foreach (var block in item)
             {
                 if (block is ParagraphBlock para)
                 {
-                    var text = ExtractText(para.Inline);
-                    var prefix = list.IsOrdered ? $"{itemNumber}. " : "• ";
+                    var itemPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(20, 0, 0, 0) };
 
-                    var itemPanel = new StackPanel { Orientation = Orientation.Horizontal };
-                    itemPanel.Children.Add(new TextBlock
+                    // If it's a task list item, render checkbox with colors
+                    if (taskListItem != null)
                     {
-                        Text = prefix,
-                        FontSize = 14,
-                        Foreground = new SolidColorBrush(textColor),
-                        Margin = new Thickness(20, 0, 8, 0)
-                    });
-                    itemPanel.Children.Add(new SelectableTextBlock
+                        var isChecked = taskListItem.Checked;
+                        var checkboxText = isChecked ? "✓" : "✗";
+                        var checkboxColor = isChecked ? Color.Parse("#22C55E") : Color.Parse("#EF4444"); // Green for checked, red for unchecked
+
+                        // Make checkbox clickable
+                        var checkboxButton = new Button
+                        {
+                            Content = new TextBlock
+                            {
+                                Text = checkboxText,
+                                FontSize = 16,
+                                FontWeight = FontWeight.Bold,
+                                Foreground = new SolidColorBrush(checkboxColor)
+                            },
+                            Background = Brushes.Transparent,
+                            BorderThickness = new Thickness(0),
+                            Padding = new Thickness(0),
+                            Margin = new Thickness(0, 0, 8, 0),
+                            VerticalAlignment = VerticalAlignment.Center,
+                            Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand)
+                        };
+
+                        // Store the task list item for later updates
+                        checkboxButton.Tag = new { TaskList = taskListItem, ParagraphBlock = para };
+                        checkboxButton.Click += OnCheckboxClicked;
+
+                        itemPanel.Children.Add(checkboxButton);
+
+                        // Extract text without the checkbox markdown
+                        var text = ExtractText(para.Inline);
+                        itemPanel.Children.Add(new SelectableTextBlock
+                        {
+                            Text = text,
+                            FontSize = 14,
+                            Foreground = new SolidColorBrush(textColor),
+                            TextWrapping = TextWrapping.Wrap,
+                            VerticalAlignment = VerticalAlignment.Center
+                        });
+                    }
+                    else
                     {
-                        Text = text,
-                        FontSize = 14,
-                        Foreground = new SolidColorBrush(textColor),
-                        TextWrapping = TextWrapping.Wrap
-                    });
+                        // Regular list item
+                        var text = ExtractText(para.Inline);
+                        var prefix = list.IsOrdered ? $"{itemNumber}. " : "• ";
+
+                        itemPanel.Children.Add(new TextBlock
+                        {
+                            Text = prefix,
+                            FontSize = 14,
+                            Foreground = new SolidColorBrush(textColor),
+                            Margin = new Thickness(0, 0, 8, 0)
+                        });
+                        itemPanel.Children.Add(new SelectableTextBlock
+                        {
+                            Text = text,
+                            FontSize = 14,
+                            Foreground = new SolidColorBrush(textColor),
+                            TextWrapping = TextWrapping.Wrap
+                        });
+                    }
+
                     panel.Children.Add(itemPanel);
                 }
             }
@@ -431,7 +626,28 @@ public partial class EditorPreviewView : UserControl
         return panel;
     }
 
-    private Control RenderQuote(QuoteBlock quote, Color textColor)
+    private void OnCheckboxClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (sender is not Button button || button.Tag == null || DataContext is not DocumentViewModel vm || _editor == null)
+            return;
+
+        dynamic tag = button.Tag;
+        TaskList taskList = tag.TaskList;
+
+        // Toggle the checkbox state
+        var currentText = _editor.Text ?? string.Empty;
+        var pattern = taskList.Checked ? @"\[x\]" : @"\[ \]";
+        var replacement = taskList.Checked ? "[ ]" : "[x]";
+
+        // Find and replace the first occurrence (simple implementation)
+        var regex = new System.Text.RegularExpressions.Regex(pattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        var newText = regex.Replace(currentText, replacement, 1);
+
+        _editor.Text = newText;
+        vm.EditorViewModel.Text = newText;
+    }
+
+    private Control RenderQuote(QuoteBlock quote, Color textColor, bool isDarkTheme)
     {
         var panel = new StackPanel { Spacing = 4 };
 
@@ -451,8 +667,8 @@ public partial class EditorPreviewView : UserControl
             }
         }
 
-        var borderColor = Color.Parse("#CCCCCC");
-        var bgColor = Color.Parse("#F9F9F9");
+        var borderColor = isDarkTheme ? Color.Parse("#505050") : Color.Parse("#CCCCCC");
+        var bgColor = isDarkTheme ? Color.Parse("#2A2A2A") : Color.Parse("#F9F9F9");
 
         return new Border
         {
@@ -463,6 +679,108 @@ public partial class EditorPreviewView : UserControl
             Margin = new Thickness(0, 0, 0, 10),
             Child = panel
         };
+    }
+
+    private Control RenderTable(Markdig.Extensions.Tables.Table table, Color textColor, bool isDarkTheme)
+    {
+        var grid = new Grid
+        {
+            Margin = new Thickness(0, 0, 0, 16),
+            RowDefinitions = new RowDefinitions(),
+            ColumnDefinitions = new ColumnDefinitions()
+        };
+
+        var borderColor = isDarkTheme ? Color.Parse("#404040") : Color.Parse("#E0E0E0");
+        var headerBg = isDarkTheme ? Color.Parse("#2D2D2D") : Color.Parse("#F5F5F5");
+        var evenRowBg = isDarkTheme ? Color.Parse("#252525") : Color.Parse("#FAFAFA");
+        var oddRowBg = isDarkTheme ? Color.Parse("#1E1E1E") : Brushes.White.Color;
+
+        // Count columns from first row
+        var firstRow = table.FirstOrDefault() as Markdig.Extensions.Tables.TableRow;
+        if (firstRow == null) return new Border();
+
+        int columnCount = firstRow.Count;
+        for (int i = 0; i < columnCount; i++)
+        {
+            grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+        }
+
+        int rowIndex = 0;
+        bool isHeader = true;
+
+        foreach (var row in table.OfType<Markdig.Extensions.Tables.TableRow>())
+        {
+            grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+
+            int colIndex = 0;
+            foreach (var cell in row.OfType<Markdig.Extensions.Tables.TableCell>())
+            {
+                var cellText = ExtractTableCellText(cell);
+                var cellBorder = new Border
+                {
+                    BorderBrush = new SolidColorBrush(borderColor),
+                    BorderThickness = new Thickness(1),
+                    Padding = new Thickness(8, 6, 8, 6),
+                    Background = new SolidColorBrush(isHeader ? headerBg : (rowIndex % 2 == 0 ? evenRowBg : oddRowBg)),
+                    Child = new SelectableTextBlock
+                    {
+                        Text = cellText,
+                        FontSize = 14,
+                        FontWeight = isHeader ? FontWeight.Bold : FontWeight.Normal,
+                        Foreground = new SolidColorBrush(textColor),
+                        TextWrapping = TextWrapping.Wrap,
+                        VerticalAlignment = VerticalAlignment.Center
+                    }
+                };
+
+                Grid.SetRow(cellBorder, rowIndex);
+                Grid.SetColumn(cellBorder, colIndex);
+                grid.Children.Add(cellBorder);
+
+                colIndex++;
+            }
+
+            rowIndex++;
+            isHeader = false; // Only first row is header
+        }
+
+        return grid;
+    }
+
+    private string ExtractTableCellText(Markdig.Extensions.Tables.TableCell cell)
+    {
+        var result = new StringBuilder();
+        // TableCell contains blocks, typically a single ParagraphBlock
+        foreach (var block in cell)
+        {
+            if (block is ParagraphBlock para && para.Inline != null)
+            {
+                foreach (var inline in para.Inline)
+                {
+                    if (inline is LiteralInline literal)
+                    {
+                        result.Append(literal.Content.ToString());
+                    }
+                    else if (inline is EmphasisInline emphasis)
+                    {
+                        result.Append(ExtractText(emphasis));
+                    }
+                    else if (inline is CodeInline code)
+                    {
+                        result.Append($"`{code.Content}`");
+                    }
+                    else if (inline is LinkInline link)
+                    {
+                        result.Append(ExtractText(link));
+                    }
+                    else
+                    {
+                        result.Append(inline.ToString());
+                    }
+                }
+            }
+        }
+        return result.ToString();
     }
 
     private string ExtractText(Markdig.Syntax.Inlines.ContainerInline? inline)

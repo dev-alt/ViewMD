@@ -30,6 +30,7 @@ public partial class App : Application
         services.AddSingleton<IFileService, FileService>();
         services.AddSingleton<IExportService, ExportService>();
         services.AddSingleton<IRecentFilesService, RecentFilesService>();
+        services.AddSingleton<IDialogService, DialogService>();
 
         // ViewModels
         services.AddTransient<MainViewModel>();

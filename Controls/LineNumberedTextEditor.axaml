@@ -1,0 +1,41 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="MarkdownViewer.Controls.LineNumberedTextEditor">
+    <Grid ColumnDefinitions="Auto,*">
+        <!-- Line Numbers -->
+        <Border Grid.Column="0"
+                Name="LineNumberBorder"
+                Background="#F8F8F8"
+                BorderBrush="#E0E0E0"
+                BorderThickness="0,0,1,0"
+                Padding="8,10,8,10"
+                MinWidth="50">
+            <ScrollViewer Name="LineNumberScroller"
+                         VerticalScrollBarVisibility="Hidden"
+                         HorizontalScrollBarVisibility="Hidden">
+                <TextBlock Name="LineNumbers"
+                          FontFamily="Consolas,Courier New,monospace"
+                          FontSize="14"
+                          Foreground="#888888"
+                          TextAlignment="Right"
+                          Text="1"/>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Editor -->
+        <TextBox Grid.Column="1"
+                 Name="Editor"
+                 FontFamily="Consolas,Courier New,monospace"
+                 FontSize="14"
+                 AcceptsReturn="True"
+                 AcceptsTab="True"
+                 TextWrapping="Wrap"
+                 BorderThickness="0"
+                 VerticalAlignment="Stretch"
+                 HorizontalAlignment="Stretch"
+                 VerticalContentAlignment="Top"
+                 Padding="10"
+                 Background="White"
+                 Foreground="Black"/>
+    </Grid>
+</UserControl>
