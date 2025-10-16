@@ -13,7 +13,9 @@
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
 
-
+  <!-- Avalonia Accelerate License Key - Use environment variable to keep secret out of source control -->
+  <ItemGroup Condition="'$(AVALONIA_LICENSE_KEY)' != ''">
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.6" />
