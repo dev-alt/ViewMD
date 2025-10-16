@@ -5,9 +5,51 @@
              xmlns:vm="using:MarkdownViewer.ViewModels"
              xmlns:conv="using:MarkdownViewer.Converters"
              xmlns:controls="using:MarkdownViewer.Controls"
+             xmlns:rtb="using:AvRichTextBox"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="650"
              x:Class="MarkdownViewer.Views.EditorPreviewView"
              x:DataType="vm:DocumentViewModel">
+
+    <UserControl.Styles>
+        <!-- Custom Scrollbar Styling -->
+        <Style Selector="ScrollViewer /template/ ScrollBar">
+            <Setter Property="AllowAutoHide" Value="True"/>
+            <Setter Property="Margin" Value="0"/>
+        </Style>
+
+        <Style Selector="ScrollViewer /template/ ScrollBar:vertical">
+            <Setter Property="Width" Value="12"/>
+        </Style>
+
+        <Style Selector="ScrollViewer /template/ ScrollBar:horizontal">
+            <Setter Property="Height" Value="12"/>
+        </Style>
+
+        <!-- Scrollbar Track -->
+        <Style Selector="ScrollViewer /template/ ScrollBar /template/ Border#PART_TrackBackground">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+
+        <!-- Scrollbar Thumb (the draggable part) -->
+        <Style Selector="ScrollViewer /template/ ScrollBar /template/ Thumb">
+            <Setter Property="Background" Value="#C0C0C0"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Margin" Value="2"/>
+        </Style>
+
+        <Style Selector="ScrollViewer /template/ ScrollBar /template/ Thumb:pointerover">
+            <Setter Property="Background" Value="#A0A0A0"/>
+        </Style>
+
+        <Style Selector="ScrollViewer /template/ ScrollBar /template/ Thumb:pressed">
+            <Setter Property="Background" Value="#808080"/>
+        </Style>
+
+        <!-- Hide scrollbar buttons -->
+        <Style Selector="ScrollViewer /template/ ScrollBar /template/ RepeatButton">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+    </UserControl.Styles>
 
     <Grid RowDefinitions="0,*" ColumnDefinitions="*,5,*">
         <!-- Editor Panel -->
@@ -29,8 +71,10 @@
             <ScrollViewer Name="PreviewScrollerRight"
                          VerticalScrollBarVisibility="Auto"
                          HorizontalScrollBarVisibility="Disabled"
-                         Padding="16">
-                <StackPanel Name="PreviewContentRight" Spacing="8" MaxWidth="1200">
+                         AllowAutoHide="True"
+                         Padding="16"
+                         Focusable="True">
+                <StackPanel Name="PreviewContentRight" Spacing="8" MaxWidth="1200" Focusable="True">
                     <TextBlock Text="Start typing markdown in the editor to see the preview..."
                               FontStyle="Italic"
                               TextWrapping="Wrap"
@@ -39,22 +83,10 @@
             </ScrollViewer>
         </Border>
 
-        <!-- Read mode preview (full width) -->
+        <!-- Read mode preview (full width) with RichTextBox -->
         <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Name="PreviewBorderFull" IsVisible="{Binding IsReadMode}">
-            <ScrollViewer Name="PreviewScrollerFull"
-                         VerticalScrollBarVisibility="Auto"
-                         HorizontalScrollBarVisibility="Disabled">
-                <Panel HorizontalAlignment="Center">
-                    <StackPanel Name="PreviewContentFull"
-                               Spacing="8"
-                               MaxWidth="{Binding PreviewMaxWidth}"
-                               Margin="40,40,40,40">
-                        <TextBlock Text="Start typing markdown in the editor to see the preview..."
-                                  FontStyle="Italic"
-                                  TextWrapping="Wrap"
-                                  Name="PlaceholderFull"/>
-                    </StackPanel>
-                </Panel>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="16">
+                <rtb:RichTextBox Name="PreviewRichTextBox" IsReadOnly="True" BorderThickness="0" Background="Transparent"/>
             </ScrollViewer>
         </Border>
     </Grid>

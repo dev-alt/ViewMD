@@ -4,16 +4,25 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using Avalonia.Media;
 using Avalonia.Layout;
+using Avalonia.Input;
 using MarkdownViewer.ViewModels;
 using MarkdownViewer.Controls;
 using MarkdownViewer.Services;
+using AvRichTextBox;
 using Markdig;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using Markdig.Extensions.TaskLists;
+using Markdig.Extensions.Footnotes;
+using Markdig.Extensions.Abbreviations;
+using Markdig.Extensions.Mathematics;
+using Markdig.Extensions.EmphasisExtras;
+using Markdig.Extensions.DefinitionLists;
+using Markdig.Extensions.Figures;
 using System;
 using System.Linq;
 using System.Text;
+using System.Collections.Generic;
 
 namespace MarkdownViewer.Views;
 
@@ -28,14 +37,17 @@ public partial class EditorPreviewView : UserControl
     private GridSplitter? _splitter;
     private TextBlock? _placeholderRight;
     private TextBlock? _placeholderFull;
+    private RichTextBox? _previewRichTextBox;
     private DispatcherTimer? _renderTimer;
     private string _lastRenderedText = string.Empty;
+    private MarkdownToFlowDocumentConverter? _markdownConverter;
 
     public EditorPreviewView()
     {
         InitializeComponent();
         SetupEditor();
         SetupPreview();
+        SetupKeyboardHandling();
     }
 
     private void InitializeComponent()
@@ -50,6 +62,7 @@ public partial class EditorPreviewView : UserControl
         _splitter = this.FindControl<GridSplitter>("Splitter");
         _placeholderRight = this.FindControl<TextBlock>("PlaceholderRight");
         _placeholderFull = this.FindControl<TextBlock>("PlaceholderFull");
+        _previewRichTextBox = this.FindControl<RichTextBox>("PreviewRichTextBox");
     }
 
     private void SetupEditor()
@@ -84,12 +97,102 @@ public partial class EditorPreviewView : UserControl
         };
     }
 
+    private void SetupKeyboardHandling()
+    {
+        // Handle keyboard shortcuts for the preview panels
+        this.KeyDown += OnPreviewKeyDown;
+    }
+
+    private async void OnPreviewKeyDown(object? sender, KeyEventArgs e)
+    {
+        // Check for Ctrl+A (Select All) - copy all text to clipboard
+        if (e.Key == Key.A && e.KeyModifiers == KeyModifiers.Control)
+        {
+            // Extract all rendered text from the preview with proper formatting
+            if (DataContext is DocumentViewModel vm)
+            {
+                var allRenderedText = ExtractAllRenderedText(vm.IsReadMode);
+                if (!string.IsNullOrEmpty(allRenderedText))
+                {
+                    // Copy to clipboard
+                    var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+                    if (clipboard != null)
+                    {
+                        await clipboard.SetTextAsync(allRenderedText);
+
+                        // Show a brief notification that text was copied
+                        System.Diagnostics.Debug.WriteLine($"Copied {allRenderedText.Length} characters to clipboard");
+                    }
+                    e.Handled = true;
+                }
+            }
+        }
+    }
+
+    private string ExtractAllRenderedText(bool isReadMode)
+    {
+        var target = isReadMode ? _previewContentFull : _previewContentRight;
+        if (target == null) return string.Empty;
+
+        var result = new StringBuilder();
+
+        foreach (var child in target.Children)
+        {
+            ExtractTextFromControl(child, result);
+        }
+
+        return result.ToString();
+    }
+
+    private void ExtractTextFromControl(Control control, StringBuilder result)
+    {
+        switch (control)
+        {
+            case SelectableTextBlock textBlock:
+                if (!string.IsNullOrWhiteSpace(textBlock.Text))
+                {
+                    result.AppendLine(textBlock.Text);
+                }
+                break;
+
+            case TextBlock regularTextBlock:
+                if (!string.IsNullOrWhiteSpace(regularTextBlock.Text))
+                {
+                    result.AppendLine(regularTextBlock.Text);
+                }
+                break;
+
+            case Panel panel:
+                foreach (var child in panel.Children)
+                {
+                    ExtractTextFromControl(child, result);
+                }
+                break;
+
+            case Border border when border.Child != null:
+                ExtractTextFromControl(border.Child, result);
+                break;
+
+            case ContentControl contentControl when contentControl.Content is Control contentAsControl:
+                ExtractTextFromControl(contentAsControl, result);
+                break;
+        }
+    }
+
     protected override void OnDataContextChanged(EventArgs e)
     {
         base.OnDataContextChanged(e);
 
-    if (DataContext is DocumentViewModel vm)
+        if (DataContext is DocumentViewModel vm)
         {
+            // Create markdown converter with Markdig pipeline
+            var pipeline = new MarkdownPipelineBuilder()
+                .UseAdvancedExtensions()
+                .UseEmojiAndSmiley()
+                .UseEmphasisExtras()
+                .Build();
+            _markdownConverter = new MarkdownToFlowDocumentConverter(pipeline);
+
             // Wire up editor to view model
             vm.EditorViewModel.TextInsertRequested += OnTextInsertRequested;
 
@@ -211,11 +314,22 @@ public partial class EditorPreviewView : UserControl
 
     private void UpdatePreview(string markdownText, bool isReadMode, bool isDarkTheme = false)
     {
+        _lastRenderedText = markdownText;
+
+        // Use RichTextBox for read mode, native rendering for edit mode
+        if (isReadMode && _previewRichTextBox != null && _markdownConverter != null)
+        {
+            // RichTextBox rendering for read mode
+            var flowDoc = _markdownConverter.Convert(markdownText, isDarkTheme);
+            _previewRichTextBox.FlowDocument = flowDoc;
+            return;
+        }
+
+        // Native rendering for edit mode (right pane)
         var target = isReadMode ? _previewContentFull : _previewContentRight;
         if (target == null)
             return;
 
-        _lastRenderedText = markdownText;
         target.Children.Clear();
 
         if (string.IsNullOrWhiteSpace(markdownText))
@@ -231,15 +345,33 @@ public partial class EditorPreviewView : UserControl
             return;
         }
 
-        // Parse markdown using Markdig
+        // Parse markdown using Markdig with ALL extensions enabled
         var pipeline = new MarkdownPipelineBuilder()
             .UseAdvancedExtensions()
             .UseEmojiAndSmiley()
+            .UseAutoLinks()
+            .UseGenericAttributes()
+            .UseDefinitionLists()
+            .UseFootnotes()
+            .UseAbbreviations()
+            .UsePipeTables()
+            .UseGridTables()
+            .UseTaskLists()
+            .UseAutoIdentifiers()
+            .UseMediaLinks()
+            .UseSmartyPants()
+            .UseMathematics()
+            .UseDiagrams()
+            .UseYamlFrontMatter()
+            .UseEmphasisExtras()
+            .UseCustomContainers()
+            .UseFigures()
+            .UseCitations()
             .Build();
 
         var document = Markdown.Parse(markdownText, pipeline);
 
-        // Render each block element
+        // Render each block element with rich formatting
         foreach (var block in document)
         {
             var element = RenderBlock(block, isDarkTheme);
@@ -250,7 +382,7 @@ public partial class EditorPreviewView : UserControl
         }
     }
 
-    private Control? RenderBlock(Block block, bool isDarkTheme)
+    private Control? RenderBlock(Markdig.Syntax.Block block, bool isDarkTheme)
     {
         var textColor = isDarkTheme ? Color.Parse("#E0E0E0") : Color.Parse("#333333");
         var mutedColor = isDarkTheme ? Color.Parse("#888888") : Color.Parse("#666666");
@@ -269,6 +401,9 @@ public partial class EditorPreviewView : UserControl
                 Margin = new Thickness(0, 10, 0, 10)
             },
             Markdig.Extensions.Tables.Table table => RenderTable(table, textColor, isDarkTheme),
+            DefinitionList defList => RenderDefinitionList(defList, textColor, mutedColor),
+            Figure figure => RenderFigure(figure, textColor, mutedColor),
+            FootnoteGroup footnoteGroup => RenderFootnoteGroup(footnoteGroup, textColor, isDarkTheme),
             _ => null
         };
     }
@@ -320,9 +455,17 @@ public partial class EditorPreviewView : UserControl
             return RenderImage(singleImage);
         }
 
-        var panel = new WrapPanel { Margin = new Thickness(0, 0, 0, 10) };
-        RenderInlines(panel, paragraph.Inline, textColor);
-        return panel;
+        // Use SelectableTextBlock with Inlines for proper multi-line text selection
+        var textBlock = new SelectableTextBlock
+        {
+            Margin = new Thickness(0, 0, 0, 10),
+            TextWrapping = TextWrapping.Wrap,
+            FontSize = 14,
+            Foreground = new SolidColorBrush(textColor)
+        };
+
+        RenderInlinesToSelectableTextBlock(textBlock, paragraph.Inline, textColor);
+        return textBlock;
     }
 
     private Control RenderImage(LinkInline imageLink)
@@ -396,6 +539,168 @@ public partial class EditorPreviewView : UserControl
         }
     }
 
+    // New method for rendering inlines to SelectableTextBlock.Inlines (supports multi-line selection)
+    private void RenderInlinesToSelectableTextBlock(SelectableTextBlock textBlock, ContainerInline? inline, Color textColor)
+    {
+        if (inline == null) return;
+
+        foreach (var item in inline)
+        {
+            switch (item)
+            {
+                case LiteralInline literal:
+                    textBlock.Inlines?.Add(new Avalonia.Controls.Documents.Run
+                    {
+                        Text = literal.Content.ToString()
+                    });
+                    break;
+
+                case LinkInline link when link.IsImage:
+                    // For inline images, we need to fall back to WrapPanel approach
+                    // Skip inline images in TextBlock - they're handled at paragraph level
+                    textBlock.Inlines?.Add(new Avalonia.Controls.Documents.Run
+                    {
+                        Text = $"[Image: {link.Url ?? "No URL"}]",
+                        FontStyle = FontStyle.Italic,
+                        Foreground = new SolidColorBrush(Color.Parse("#888888"))
+                    });
+                    break;
+
+                case LinkInline link:
+                    // For links, we can use InlineUIContainer with HyperlinkButton
+                    // But for better text selection, let's use styled Run with URL
+                    var linkText = ExtractText(link);
+                    textBlock.Inlines?.Add(new Avalonia.Controls.Documents.Run
+                    {
+                        Text = linkText,
+                        Foreground = new SolidColorBrush(Color.Parse("#0066CC")),
+                        TextDecorations = Avalonia.Media.TextDecorations.Underline
+                    });
+                    break;
+
+                // Special emphasis cases MUST come before general EmphasisInline case
+                case EmphasisInline emphasis when emphasis.DelimiterChar == '=' && emphasis.DelimiterCount == 2:
+                    // Mark/highlight text
+                    textBlock.Inlines?.Add(new Avalonia.Controls.Documents.Run
+                    {
+                        Text = ExtractText(emphasis),
+                        Background = new SolidColorBrush(Color.Parse("#FFF3CD")),
+                        Foreground = Brushes.Black
+                    });
+                    break;
+
+                case EmphasisInline emphasis when emphasis.DelimiterChar == '+' && emphasis.DelimiterCount == 2:
+                    // Inserted text (underline)
+                    textBlock.Inlines?.Add(new Avalonia.Controls.Documents.Run
+                    {
+                        Text = ExtractText(emphasis),
+                        TextDecorations = Avalonia.Media.TextDecorations.Underline
+                    });
+                    break;
+
+                case EmphasisInline emphasis when emphasis.DelimiterChar == '~' && emphasis.DelimiterCount == 2:
+                    // Strikethrough
+                    textBlock.Inlines?.Add(new Avalonia.Controls.Documents.Run
+                    {
+                        Text = ExtractText(emphasis),
+                        TextDecorations = Avalonia.Media.TextDecorations.Strikethrough
+                    });
+                    break;
+
+                case EmphasisInline emphasis when emphasis.DelimiterChar == '~' && emphasis.DelimiterCount == 1:
+                    // Subscript
+                    textBlock.Inlines?.Add(new Avalonia.Controls.Documents.Run
+                    {
+                        Text = ExtractText(emphasis),
+                        FontSize = 11,
+                        BaselineAlignment = Avalonia.Media.BaselineAlignment.Subscript
+                    });
+                    break;
+
+                case EmphasisInline emphasis when emphasis.DelimiterChar == '^' && emphasis.DelimiterCount == 1:
+                    // Superscript
+                    textBlock.Inlines?.Add(new Avalonia.Controls.Documents.Run
+                    {
+                        Text = ExtractText(emphasis),
+                        FontSize = 11,
+                        BaselineAlignment = Avalonia.Media.BaselineAlignment.Superscript
+                    });
+                    break;
+
+                case EmphasisInline emphasis:
+                    // General bold/italic case
+                    var run = new Avalonia.Controls.Documents.Run
+                    {
+                        Text = ExtractText(emphasis)
+                    };
+                    if (emphasis.DelimiterCount == 2 && emphasis.DelimiterChar == '*')
+                        run.FontWeight = FontWeight.Bold;
+                    else if (emphasis.DelimiterCount == 1)
+                        run.FontStyle = FontStyle.Italic;
+                    textBlock.Inlines?.Add(run);
+                    break;
+
+                case CodeInline code:
+                    textBlock.Inlines?.Add(new Avalonia.Controls.Documents.Run
+                    {
+                        Text = $"`{code.Content}`",
+                        FontFamily = new FontFamily("Consolas,Courier New,monospace"),
+                        Background = new SolidColorBrush(Color.Parse("#F5F5F5"))
+                    });
+                    break;
+
+                case LineBreakInline:
+                    textBlock.Inlines?.Add(new Avalonia.Controls.Documents.LineBreak());
+                    break;
+
+                case FootnoteLink footnoteLink:
+                    textBlock.Inlines?.Add(new Avalonia.Controls.Documents.Run
+                    {
+                        Text = $"[{footnoteLink.Index + 1}]",
+                        FontSize = 11,
+                        Foreground = new SolidColorBrush(Color.Parse("#0066CC")),
+                        BaselineAlignment = Avalonia.Media.BaselineAlignment.Superscript
+                    });
+                    break;
+
+                case AbbreviationInline abbreviation:
+                    textBlock.Inlines?.Add(new Avalonia.Controls.Documents.Run
+                    {
+                        Text = abbreviation.Abbreviation?.Label ?? abbreviation.ToString(),
+                        TextDecorations = Avalonia.Media.TextDecorations.Underline
+                    });
+                    break;
+
+                case MathInline mathInline:
+                    textBlock.Inlines?.Add(new Avalonia.Controls.Documents.Run
+                    {
+                        Text = $"${mathInline.Content}$",
+                        Foreground = new SolidColorBrush(Color.Parse("#8B008B")),
+                        FontFamily = new FontFamily("Consolas,Courier New,monospace")
+                    });
+                    break;
+
+                case ContainerInline container:
+                    // Recursively render container inlines
+                    RenderInlinesToSelectableTextBlock(textBlock, container, textColor);
+                    break;
+
+                default:
+                    // Fallback - try to extract text
+                    var text = item.ToString();
+                    if (!string.IsNullOrWhiteSpace(text) && text != item.GetType().Name)
+                    {
+                        textBlock.Inlines?.Add(new Avalonia.Controls.Documents.Run
+                        {
+                            Text = text
+                        });
+                    }
+                    break;
+            }
+        }
+    }
+
+    // Old method kept for list items and other special cases that need WrapPanel
     private void RenderInlines(WrapPanel panel, ContainerInline? inline, Color textColor)
     {
         if (inline == null) return;
@@ -460,7 +765,65 @@ public partial class EditorPreviewView : UserControl
                     };
                     panel.Children.Add(linkButton);
                     break;
+                // Special emphasis cases MUST come before general EmphasisInline case
+                case EmphasisInline emphasis when emphasis.DelimiterChar == '=' && emphasis.DelimiterCount == 2:
+                    // Mark/highlight text
+                    panel.Children.Add(new SelectableTextBlock
+                    {
+                        Text = ExtractText(emphasis),
+                        FontSize = 14,
+                        Foreground = Brushes.Black,
+                        Background = new SolidColorBrush(Color.Parse("#FFF3CD"))
+                    });
+                    break;
+                case EmphasisInline emphasis when emphasis.DelimiterChar == '+' && emphasis.DelimiterCount == 2:
+                    // Inserted text (underline)
+                    var insertedText = new SelectableTextBlock
+                    {
+                        Text = ExtractText(emphasis),
+                        FontSize = 14,
+                        Foreground = new SolidColorBrush(textColor),
+                        TextDecorations = Avalonia.Media.TextDecorations.Underline
+                    };
+                    panel.Children.Add(insertedText);
+                    break;
+                case EmphasisInline emphasis when emphasis.DelimiterChar == '~' && emphasis.DelimiterCount == 2:
+                    // Strikethrough
+                    var strikeText = new SelectableTextBlock
+                    {
+                        Text = ExtractText(emphasis),
+                        FontSize = 14,
+                        Foreground = new SolidColorBrush(textColor),
+                        TextDecorations = Avalonia.Media.TextDecorations.Strikethrough
+                    };
+                    panel.Children.Add(strikeText);
+                    break;
+                case EmphasisInline emphasis when emphasis.DelimiterChar == '~' && emphasis.DelimiterCount == 1:
+                    // Subscript
+                    var subText = new SelectableTextBlock
+                    {
+                        Text = ExtractText(emphasis),
+                        FontSize = 11,
+                        Foreground = new SolidColorBrush(textColor),
+                        VerticalAlignment = VerticalAlignment.Bottom,
+                        Margin = new Thickness(0, 0, 0, -4)
+                    };
+                    panel.Children.Add(subText);
+                    break;
+                case EmphasisInline emphasis when emphasis.DelimiterChar == '^' && emphasis.DelimiterCount == 1:
+                    // Superscript
+                    var supText = new SelectableTextBlock
+                    {
+                        Text = ExtractText(emphasis),
+                        FontSize = 11,
+                        Foreground = new SolidColorBrush(textColor),
+                        VerticalAlignment = VerticalAlignment.Top,
+                        Margin = new Thickness(0, -4, 0, 0)
+                    };
+                    panel.Children.Add(supText);
+                    break;
                 case EmphasisInline emphasis:
+                    // General bold/italic case
                     var empText = ExtractText(emphasis);
                     var empBlock = new SelectableTextBlock
                     {
@@ -492,13 +855,54 @@ public partial class EditorPreviewView : UserControl
                         Foreground = new SolidColorBrush(textColor)
                     });
                     break;
-                default:
+                case FootnoteLink footnoteLink:
+                    // Render footnote reference
+                    var fnLink = new HyperlinkButton
+                    {
+                        Content = $"[{footnoteLink.Index + 1}]",
+                        FontSize = 11,
+                        Foreground = new SolidColorBrush(Color.Parse("#0066CC")),
+                        Padding = new Thickness(0),
+                        VerticalAlignment = VerticalAlignment.Top
+                    };
+                    panel.Children.Add(fnLink);
+                    break;
+                case AbbreviationInline abbreviation:
+                    // Render abbreviation with underline - AbbreviationInline is not a ContainerInline
                     panel.Children.Add(new SelectableTextBlock
                     {
-                        Text = item.ToString(),
+                        Text = abbreviation.Abbreviation?.Label ?? abbreviation.ToString(),
                         FontSize = 14,
-                        Foreground = new SolidColorBrush(textColor)
+                        Foreground = new SolidColorBrush(textColor),
+                        TextDecorations = Avalonia.Media.TextDecorations.Underline
                     });
+                    break;
+                case MathInline mathInline:
+                    // Render inline math with $ delimiters for visual indication
+                    panel.Children.Add(new SelectableTextBlock
+                    {
+                        Text = $"${mathInline.Content}$",
+                        FontSize = 14,
+                        Foreground = new SolidColorBrush(Color.Parse("#8B008B")),
+                        FontFamily = new FontFamily("Consolas,Courier New,monospace")
+                    });
+                    break;
+                case ContainerInline container:
+                    // Recursively render container inlines
+                    RenderInlines(panel, container, textColor);
+                    break;
+                default:
+                    // Fallback - try to extract text
+                    var text = item.ToString();
+                    if (!string.IsNullOrWhiteSpace(text) && text != item.GetType().Name)
+                    {
+                        panel.Children.Add(new SelectableTextBlock
+                        {
+                            Text = text,
+                            FontSize = 14,
+                            Foreground = new SolidColorBrush(textColor)
+                        });
+                    }
                     break;
             }
         }
@@ -519,7 +923,96 @@ public partial class EditorPreviewView : UserControl
         string? language = null;
         if (codeBlock is Markdig.Syntax.FencedCodeBlock fencedBlock)
         {
-            language = fencedBlock.Info;
+            language = fencedBlock.Info?.Trim().ToLowerInvariant();
+        }
+
+        // Special handling for Mermaid diagrams
+        if (language == "mermaid")
+        {
+            var mermaidPanel = new StackPanel { Spacing = 12 };
+
+            // Header with icon and title
+            var headerPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = 8,
+                Margin = new Thickness(0, 0, 0, 8)
+            };
+
+            headerPanel.Children.Add(new TextBlock
+            {
+                Text = "📊",
+                FontSize = 20,
+                VerticalAlignment = VerticalAlignment.Center
+            });
+
+            headerPanel.Children.Add(new TextBlock
+            {
+                Text = "Mermaid Diagram",
+                FontSize = 16,
+                FontWeight = FontWeight.SemiBold,
+                Foreground = new SolidColorBrush(isDarkTheme ? Color.Parse("#4FC3F7") : Color.Parse("#0288D1")),
+                VerticalAlignment = VerticalAlignment.Center
+            });
+
+            mermaidPanel.Children.Add(headerPanel);
+
+            // Create visual preview of the diagram
+            var preview = RenderMermaidPreview(code.ToString(), isDarkTheme);
+            if (preview != null)
+            {
+                mermaidPanel.Children.Add(preview);
+            }
+
+            // Diagram code with syntax highlighting
+            var codeBorder = new Border
+            {
+                Background = new SolidColorBrush(isDarkTheme ? Color.Parse("#1E1E1E") : Color.Parse("#F8F8F8")),
+                BorderBrush = new SolidColorBrush(isDarkTheme ? Color.Parse("#3F3F3F") : Color.Parse("#DDDDDD")),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(12),
+                Child = new SelectableTextBlock
+                {
+                    Text = code.ToString().TrimEnd(),
+                    FontFamily = new FontFamily("Consolas,Courier New,monospace"),
+                    FontSize = 12,
+                    Foreground = new SolidColorBrush(isDarkTheme ? Color.Parse("#D4D4D4") : Color.Parse("#333333")),
+                    TextWrapping = TextWrapping.Wrap
+                }
+            };
+
+            mermaidPanel.Children.Add(codeBorder);
+
+            // Info message
+            var infoPanel = new Border
+            {
+                Background = new SolidColorBrush(isDarkTheme ? Color.Parse("#1A2332") : Color.Parse("#E3F2FD")),
+                BorderBrush = new SolidColorBrush(isDarkTheme ? Color.Parse("#2196F3") : Color.Parse("#2196F3")),
+                BorderThickness = new Thickness(0, 0, 0, 2),
+                Padding = new Thickness(12, 8, 12, 8),
+                CornerRadius = new CornerRadius(4),
+                Child = new TextBlock
+                {
+                    Text = "💡 For full interactive rendering, export to HTML (File → Export to HTML).",
+                    FontSize = 12,
+                    Foreground = new SolidColorBrush(isDarkTheme ? Color.Parse("#90CAF9") : Color.Parse("#1565C0")),
+                    TextWrapping = TextWrapping.Wrap
+                }
+            };
+
+            mermaidPanel.Children.Add(infoPanel);
+
+            return new Border
+            {
+                Background = new SolidColorBrush(isDarkTheme ? Color.Parse("#2A2A2A") : Brushes.White.Color),
+                BorderBrush = new SolidColorBrush(isDarkTheme ? Color.Parse("#424242") : Color.Parse("#E0E0E0")),
+                BorderThickness = new Thickness(2),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(16),
+                Margin = new Thickness(0, 0, 0, 16),
+                Child = mermaidPanel
+            };
         }
 
         // Use syntax highlighter if language is specified
@@ -655,15 +1148,21 @@ public partial class EditorPreviewView : UserControl
         {
             if (block is ParagraphBlock para)
             {
-                var text = ExtractText(para.Inline);
-                panel.Children.Add(new SelectableTextBlock
+                // Use SelectableTextBlock with Inlines to support bold/italic within quotes
+                var textBlock = new SelectableTextBlock
                 {
-                    Text = text,
                     FontSize = 14,
                     FontStyle = FontStyle.Italic,
                     Foreground = new SolidColorBrush(textColor),
                     TextWrapping = TextWrapping.Wrap
-                });
+                };
+                RenderInlinesToSelectableTextBlock(textBlock, para.Inline, textColor);
+                panel.Children.Add(textBlock);
+            }
+            else if (block is QuoteBlock nestedQuote)
+            {
+                // Handle nested blockquotes
+                panel.Children.Add(RenderQuote(nestedQuote, textColor, isDarkTheme));
             }
         }
 
@@ -755,29 +1254,8 @@ public partial class EditorPreviewView : UserControl
         {
             if (block is ParagraphBlock para && para.Inline != null)
             {
-                foreach (var inline in para.Inline)
-                {
-                    if (inline is LiteralInline literal)
-                    {
-                        result.Append(literal.Content.ToString());
-                    }
-                    else if (inline is EmphasisInline emphasis)
-                    {
-                        result.Append(ExtractText(emphasis));
-                    }
-                    else if (inline is CodeInline code)
-                    {
-                        result.Append($"`{code.Content}`");
-                    }
-                    else if (inline is LinkInline link)
-                    {
-                        result.Append(ExtractText(link));
-                    }
-                    else
-                    {
-                        result.Append(inline.ToString());
-                    }
-                }
+                // Use the main ExtractText method which handles all inline types
+                result.Append(ExtractText(para.Inline));
             }
         }
         return result.ToString();
@@ -797,7 +1275,12 @@ public partial class EditorPreviewView : UserControl
                 EmphasisInline emphasis => ExtractEmphasisText(emphasis),
                 LineBreakInline => "\n",
                 LinkInline link => ExtractText(link as ContainerInline) + $" ({link.Url})",
-                _ => item.ToString()
+                FootnoteLink footnoteLink => $"[{footnoteLink.Index + 1}]",
+                AbbreviationInline abbreviation => abbreviation.Abbreviation?.Label ?? string.Empty,
+                MathInline mathInline => $"${mathInline.Content}$",
+                TaskList => string.Empty, // TaskList is a marker, skip it
+                ContainerInline container => ExtractText(container),
+                _ => item.GetType().Name == item.ToString() ? string.Empty : item.ToString() // Skip type names
             });
         }
         return result.ToString();
@@ -813,5 +1296,281 @@ public partial class EditorPreviewView : UserControl
         if (emphasis.DelimiterCount == 1)
             return $"*{text}*";
         return text;
+    }
+
+    private Control RenderDefinitionList(DefinitionList defList, Color textColor, Color mutedColor)
+    {
+        var panel = new StackPanel { Spacing = 8, Margin = new Thickness(0, 0, 0, 16) };
+
+        foreach (var item in defList)
+        {
+            if (item is DefinitionItem defItem)
+            {
+                // Render the term (dt)
+                foreach (var term in defItem.OfType<ParagraphBlock>().Take(1))
+                {
+                    var termText = ExtractText(term.Inline);
+                    panel.Children.Add(new SelectableTextBlock
+                    {
+                        Text = termText,
+                        FontSize = 14,
+                        FontWeight = FontWeight.SemiBold,
+                        Foreground = new SolidColorBrush(textColor),
+                        Margin = new Thickness(0, 8, 0, 4)
+                    });
+                }
+
+                // Render definitions (dd)
+                foreach (var def in defItem.OfType<ParagraphBlock>().Skip(1))
+                {
+                    var defText = ExtractText(def.Inline);
+                    panel.Children.Add(new SelectableTextBlock
+                    {
+                        Text = defText,
+                        FontSize = 14,
+                        Foreground = new SolidColorBrush(mutedColor),
+                        Margin = new Thickness(32, 0, 0, 4),
+                        TextWrapping = TextWrapping.Wrap
+                    });
+                }
+            }
+        }
+
+        return panel;
+    }
+
+    private Control RenderFigure(Figure figure, Color textColor, Color mutedColor)
+    {
+        var panel = new StackPanel { Spacing = 8, Margin = new Thickness(0, 16, 0, 16), HorizontalAlignment = HorizontalAlignment.Center };
+
+        foreach (var block in figure)
+        {
+            if (block is ParagraphBlock para)
+            {
+                if (para.Inline?.FirstChild is LinkInline { IsImage: true } imageLink)
+                {
+                    // Render the image
+                    panel.Children.Add(RenderImage(imageLink));
+                }
+                else
+                {
+                    // Render caption text
+                    var captionText = ExtractText(para.Inline);
+                    if (!string.IsNullOrWhiteSpace(captionText))
+                    {
+                        panel.Children.Add(new SelectableTextBlock
+                        {
+                            Text = captionText,
+                            FontSize = 13,
+                            FontStyle = FontStyle.Italic,
+                            Foreground = new SolidColorBrush(mutedColor),
+                            TextAlignment = TextAlignment.Center,
+                            TextWrapping = TextWrapping.Wrap
+                        });
+                    }
+                }
+            }
+        }
+
+        return panel;
+    }
+
+    private Control RenderFootnoteGroup(FootnoteGroup footnoteGroup, Color textColor, bool isDarkTheme)
+    {
+        var borderColor = isDarkTheme ? Color.Parse("#404040") : Color.Parse("#E0E0E0");
+        var panel = new StackPanel
+        {
+            Spacing = 8,
+            Margin = new Thickness(0, 24, 0, 0)
+        };
+
+        // Add separator
+        panel.Children.Add(new Border
+        {
+            Height = 1,
+            Background = new SolidColorBrush(borderColor),
+            Margin = new Thickness(0, 0, 0, 12)
+        });
+
+        // Add "Footnotes" heading
+        panel.Children.Add(new SelectableTextBlock
+        {
+            Text = "Footnotes",
+            FontSize = 18,
+            FontWeight = FontWeight.SemiBold,
+            Foreground = new SolidColorBrush(textColor),
+            Margin = new Thickness(0, 0, 0, 8)
+        });
+
+        // Render each footnote
+        int index = 1;
+        foreach (var footnote in footnoteGroup.OfType<Footnote>())
+        {
+            var footnotePanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 0, 0, 8) };
+
+            // Add footnote number
+            footnotePanel.Children.Add(new SelectableTextBlock
+            {
+                Text = $"[{index}]",
+                FontSize = 12,
+                Foreground = new SolidColorBrush(Color.Parse("#0066CC")),
+                VerticalAlignment = VerticalAlignment.Top
+            });
+
+            // Add footnote content
+            var contentPanel = new StackPanel { Spacing = 4 };
+            foreach (var block in footnote)
+            {
+                if (block is ParagraphBlock para)
+                {
+                    var text = ExtractText(para.Inline);
+                    contentPanel.Children.Add(new SelectableTextBlock
+                    {
+                        Text = text,
+                        FontSize = 13,
+                        Foreground = new SolidColorBrush(textColor),
+                        TextWrapping = TextWrapping.Wrap
+                    });
+                }
+            }
+            footnotePanel.Children.Add(contentPanel);
+
+            panel.Children.Add(footnotePanel);
+            index++;
+        }
+
+        return panel;
+    }
+
+    private Control? RenderMermaidPreview(string mermaidCode, bool isDarkTheme)
+    {
+        // Parse the Mermaid code to create a simple visual preview
+        var lines = mermaidCode.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (lines.Length == 0) return null;
+
+        var previewPanel = new StackPanel { Spacing = 8 };
+        var boxColor = isDarkTheme ? Color.Parse("#4A90E2") : Color.Parse("#2196F3");
+        var textOnBoxColor = Brushes.White.Color;
+
+        // Detect diagram type
+        var diagramType = lines[0].ToLowerInvariant();
+
+        if (diagramType.Contains("sequencediagram"))
+        {
+            // Render sequence diagram preview
+            var participants = new List<string>();
+            foreach (var line in lines.Skip(1))
+            {
+                if (line.ToLowerInvariant().Contains("participant"))
+                {
+                    var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length > 1)
+                    {
+                        participants.Add(parts[1]);
+                    }
+                }
+            }
+
+            if (participants.Count > 0)
+            {
+                var participantsPanel = new WrapPanel { HorizontalAlignment = HorizontalAlignment.Center };
+                foreach (var participant in participants)
+                {
+                    var box = new Border
+                    {
+                        Background = new SolidColorBrush(boxColor),
+                        BorderBrush = new SolidColorBrush(isDarkTheme ? Color.Parse("#5BA3F5") : Color.Parse("#1976D2")),
+                        BorderThickness = new Thickness(2),
+                        CornerRadius = new CornerRadius(4),
+                        Padding = new Thickness(12, 6, 12, 6),
+                        Margin = new Thickness(0, 0, 8, 0),
+                        Child = new TextBlock
+                        {
+                            Text = participant,
+                            FontSize = 13,
+                            FontWeight = FontWeight.SemiBold,
+                            Foreground = new SolidColorBrush(textOnBoxColor)
+                        }
+                    };
+                    participantsPanel.Children.Add(box);
+                }
+                previewPanel.Children.Add(new TextBlock
+                {
+                    Text = "▼ Sequence Diagram Preview",
+                    FontSize = 13,
+                    FontWeight = FontWeight.Medium,
+                    Foreground = new SolidColorBrush(isDarkTheme ? Color.Parse("#90CAF9") : Color.Parse("#1565C0")),
+                    Margin = new Thickness(0, 0, 0, 4)
+                });
+                previewPanel.Children.Add(participantsPanel);
+            }
+        }
+        else if (diagramType.Contains("graph") || diagramType.Contains("flowchart"))
+        {
+            // Render flowchart/graph preview
+            var nodes = new List<string>();
+            foreach (var line in lines.Skip(1))
+            {
+                // Extract node names (simplified parsing)
+                var matches = System.Text.RegularExpressions.Regex.Matches(line, @"([A-Z][a-zA-Z0-9]*)\[([^\]]+)\]");
+                foreach (System.Text.RegularExpressions.Match match in matches)
+                {
+                    if (match.Groups.Count > 2)
+                    {
+                        nodes.Add(match.Groups[2].Value);
+                    }
+                }
+            }
+
+            if (nodes.Count > 0)
+            {
+                var nodesPanel = new WrapPanel { HorizontalAlignment = HorizontalAlignment.Center };
+                foreach (var node in nodes.Take(6)) // Limit to 6 nodes for preview
+                {
+                    var box = new Border
+                    {
+                        Background = new SolidColorBrush(boxColor),
+                        BorderBrush = new SolidColorBrush(isDarkTheme ? Color.Parse("#5BA3F5") : Color.Parse("#1976D2")),
+                        BorderThickness = new Thickness(2),
+                        CornerRadius = new CornerRadius(8),
+                        Padding = new Thickness(12, 6, 12, 6),
+                        Margin = new Thickness(0, 0, 8, 0),
+                        Child = new TextBlock
+                        {
+                            Text = node,
+                            FontSize = 13,
+                            FontWeight = FontWeight.SemiBold,
+                            Foreground = new SolidColorBrush(textOnBoxColor)
+                        }
+                    };
+                    nodesPanel.Children.Add(box);
+                }
+                previewPanel.Children.Add(new TextBlock
+                {
+                    Text = "▼ Flow Diagram Preview",
+                    FontSize = 13,
+                    FontWeight = FontWeight.Medium,
+                    Foreground = new SolidColorBrush(isDarkTheme ? Color.Parse("#90CAF9") : Color.Parse("#1565C0")),
+                    Margin = new Thickness(0, 0, 0, 4)
+                });
+                previewPanel.Children.Add(nodesPanel);
+            }
+        }
+
+        if (previewPanel.Children.Count > 0)
+        {
+            return new Border
+            {
+                Background = new SolidColorBrush(isDarkTheme ? Color.FromArgb(40, 26, 35, 126) : Color.Parse("#E8EAF6")),
+                BorderBrush = new SolidColorBrush(boxColor),
+                BorderThickness = new Thickness(0, 0, 0, 2),
+                Padding = new Thickness(12),
+                CornerRadius = new CornerRadius(4),
+                Margin = new Thickness(0, 0, 0, 8),
+                Child = previewPanel
+            };
+        }
+
+        return null;
     }
 }
