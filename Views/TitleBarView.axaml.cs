@@ -235,6 +235,78 @@ public partial class TitleBarView : UserControl
             };
         }
 
+        var oceanBreezeThemeItem = this.FindControl<MenuItem>("OceanBreezeThemeItem");
+        if (oceanBreezeThemeItem != null)
+        {
+            oceanBreezeThemeItem.PointerPressed += (s, e) =>
+            {
+                if (oceanBreezeThemeItem.Command != null && oceanBreezeThemeItem.Command.CanExecute(null))
+                {
+                    oceanBreezeThemeItem.Command.Execute(null);
+                }
+            };
+        }
+
+        var forestCanopyThemeItem = this.FindControl<MenuItem>("ForestCanopyThemeItem");
+        if (forestCanopyThemeItem != null)
+        {
+            forestCanopyThemeItem.PointerPressed += (s, e) =>
+            {
+                if (forestCanopyThemeItem.Command != null && forestCanopyThemeItem.Command.CanExecute(null))
+                {
+                    forestCanopyThemeItem.Command.Execute(null);
+                }
+            };
+        }
+
+        var sunsetGlowThemeItem = this.FindControl<MenuItem>("SunsetGlowThemeItem");
+        if (sunsetGlowThemeItem != null)
+        {
+            sunsetGlowThemeItem.PointerPressed += (s, e) =>
+            {
+                if (sunsetGlowThemeItem.Command != null && sunsetGlowThemeItem.Command.CanExecute(null))
+                {
+                    sunsetGlowThemeItem.Command.Execute(null);
+                }
+            };
+        }
+
+        var midnightPurpleThemeItem = this.FindControl<MenuItem>("MidnightPurpleThemeItem");
+        if (midnightPurpleThemeItem != null)
+        {
+            midnightPurpleThemeItem.PointerPressed += (s, e) =>
+            {
+                if (midnightPurpleThemeItem.Command != null && midnightPurpleThemeItem.Command.CanExecute(null))
+                {
+                    midnightPurpleThemeItem.Command.Execute(null);
+                }
+            };
+        }
+
+        var roseGoldThemeItem = this.FindControl<MenuItem>("RoseGoldThemeItem");
+        if (roseGoldThemeItem != null)
+        {
+            roseGoldThemeItem.PointerPressed += (s, e) =>
+            {
+                if (roseGoldThemeItem.Command != null && roseGoldThemeItem.Command.CanExecute(null))
+                {
+                    roseGoldThemeItem.Command.Execute(null);
+                }
+            };
+        }
+
+        var arcticMintThemeItem = this.FindControl<MenuItem>("ArcticMintThemeItem");
+        if (arcticMintThemeItem != null)
+        {
+            arcticMintThemeItem.PointerPressed += (s, e) =>
+            {
+                if (arcticMintThemeItem.Command != null && arcticMintThemeItem.Command.CanExecute(null))
+                {
+                    arcticMintThemeItem.Command.Execute(null);
+                }
+            };
+        }
+
         // Tab commands
         var closeTabMenuItem = this.FindControl<MenuItem>("CloseTabMenuItem");
         if (closeTabMenuItem != null)

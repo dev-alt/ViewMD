@@ -121,6 +121,37 @@
                                 <TextBlock Text="⬛" FontSize="11"/>
                             </MenuItem.Icon>
                         </MenuItem>
+                        <Separator/>
+                        <MenuItem Header="Ocean Breeze" Command="{Binding SetOceanBreezeThemeCommand}" Name="OceanBreezeThemeItem">
+                            <MenuItem.Icon>
+                                <TextBlock Text="🌊" FontSize="11"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Forest Canopy" Command="{Binding SetForestCanopyThemeCommand}" Name="ForestCanopyThemeItem">
+                            <MenuItem.Icon>
+                                <TextBlock Text="🌲" FontSize="11"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Sunset Glow" Command="{Binding SetSunsetGlowThemeCommand}" Name="SunsetGlowThemeItem">
+                            <MenuItem.Icon>
+                                <TextBlock Text="🌅" FontSize="11"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Midnight Purple" Command="{Binding SetMidnightPurpleThemeCommand}" Name="MidnightPurpleThemeItem">
+                            <MenuItem.Icon>
+                                <TextBlock Text="🔮" FontSize="11"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Rose Gold" Command="{Binding SetRoseGoldThemeCommand}" Name="RoseGoldThemeItem">
+                            <MenuItem.Icon>
+                                <TextBlock Text="🌹" FontSize="11"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Arctic Mint" Command="{Binding SetArcticMintThemeCommand}" Name="ArcticMintThemeItem">
+                            <MenuItem.Icon>
+                                <TextBlock Text="❄️" FontSize="11"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
                     </MenuItem>
                     <Separator/>
                     <!-- Tab Commands -->

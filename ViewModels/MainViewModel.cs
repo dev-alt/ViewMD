@@ -404,6 +404,24 @@ public partial class MainViewModel : ViewModelBase
         SetTheme(AppTheme.PureDark);
     }
 
+    [RelayCommand]
+    private void SetOceanBreezeTheme() => SetTheme(AppTheme.OceanBreeze);
+
+    [RelayCommand]
+    private void SetForestCanopyTheme() => SetTheme(AppTheme.ForestCanopy);
+
+    [RelayCommand]
+    private void SetSunsetGlowTheme() => SetTheme(AppTheme.SunsetGlow);
+
+    [RelayCommand]
+    private void SetMidnightPurpleTheme() => SetTheme(AppTheme.MidnightPurple);
+
+    [RelayCommand]
+    private void SetRoseGoldTheme() => SetTheme(AppTheme.RoseGold);
+
+    [RelayCommand]
+    private void SetArcticMintTheme() => SetTheme(AppTheme.ArcticMint);
+
     // Tab Management
     [RelayCommand]
     private void CloseActiveTab()
