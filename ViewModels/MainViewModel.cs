@@ -348,8 +348,7 @@ public partial class MainViewModel : ViewModelBase
     }
 
     // Theme Management
-    [RelayCommand]
-    private void SetTheme(AppTheme theme)
+    public void SetTheme(AppTheme theme)
     {
         CurrentTheme = theme;
 
@@ -371,19 +370,39 @@ public partial class MainViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void SetGlassLightTheme() => SetTheme(AppTheme.GlassLight);
+    private void SetGlassLightTheme()
+    {
+        System.Diagnostics.Debug.WriteLine("SetGlassLightTheme called");
+        SetTheme(AppTheme.GlassLight);
+    }
 
     [RelayCommand]
-    private void SetGlassDarkTheme() => SetTheme(AppTheme.GlassDark);
+    private void SetGlassDarkTheme()
+    {
+        System.Diagnostics.Debug.WriteLine("SetGlassDarkTheme called");
+        SetTheme(AppTheme.GlassDark);
+    }
 
     [RelayCommand]
-    private void SetAcrylicLightTheme() => SetTheme(AppTheme.AcrylicLight);
+    private void SetAcrylicLightTheme()
+    {
+        System.Diagnostics.Debug.WriteLine("SetAcrylicLightTheme called");
+        SetTheme(AppTheme.AcrylicLight);
+    }
 
     [RelayCommand]
-    private void SetAcrylicDarkTheme() => SetTheme(AppTheme.AcrylicDark);
+    private void SetAcrylicDarkTheme()
+    {
+        System.Diagnostics.Debug.WriteLine("SetAcrylicDarkTheme called");
+        SetTheme(AppTheme.AcrylicDark);
+    }
 
     [RelayCommand]
-    private void SetPureDarkTheme() => SetTheme(AppTheme.PureDark);
+    private void SetPureDarkTheme()
+    {
+        System.Diagnostics.Debug.WriteLine("SetPureDarkTheme called");
+        SetTheme(AppTheme.PureDark);
+    }
 
     // Tab Management
     [RelayCommand]
