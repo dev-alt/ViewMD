@@ -98,11 +98,12 @@ Command-line arguments are processed in `App.axaml.cs:62-103`:
 ## Markdown Processing
 
 Markdig pipeline configuration in `MarkdownService.cs:14-31`:
-- Uses `UseAdvancedExtensions()` for GFM support
-- Includes emoji, task lists, tables, math (KaTeX), diagrams (Mermaid)
-- HTML output is wrapped with CSS, Mermaid.js, and KaTeX scripts
+- Uses `UseAdvancedExtensions()` for GFM support including superscript (^text^), subscript (~text~), highlight (==text==), inserted text (++text++)
+- Includes emoji, task lists, tables, math inline ($equation$), diagrams (Mermaid), footnotes ([^1]), abbreviations
+- Native Avalonia rendering in preview pane with full formatting support
+- HTML export includes CSS, Mermaid.js, and KaTeX scripts for standalone viewing
 
-Preview HTML generation includes theme-aware styling (light/dark) with proper syntax highlighting colors.
+Preview uses `EditorPreviewView.axaml.cs` with comprehensive inline rendering supporting all Markdig extensions. Theme-aware styling (light/dark) with proper syntax highlighting colors.
 
 ## Important Implementation Details
 
@@ -128,6 +129,28 @@ Theme state is maintained at both the `MainViewModel` level and per-`DocumentVie
 2. `ActiveDocument.ApplyTheme()` is called
 3. Preview is regenerated with new theme CSS
 
+### Advanced Features
+
+**Keyboard Shortcuts** (`LineNumberedTextEditor.axaml.cs:150-230`):
+- Ctrl+B: Bold, Ctrl+I: Italic, Ctrl+K: Code, Ctrl+Shift+K: Code block
+- Ctrl+L: Link, Ctrl+Shift+S: Strikethrough
+- Alt+1-6: Headings (h1-h6)
+
+**Synchronized Scrolling** (`EditorPreviewView.axaml.cs:83-96`):
+- Editor scroll position syncs to preview proportionally
+- Debounced to prevent infinite loops
+
+**Export Features** (`ExportService.cs`):
+- HTML export with standalone styling (Mermaid + KaTeX included)
+- PDF export using QuestPDF Community Edition (free)
+- Theme-aware exports (light/dark mode)
+
+**Right-Click Context Menu** (`EditorPreviewView.axaml:33-40, 55-62`):
+- "Copy All Markdown" - copies raw markdown source
+- "Copy as Plain Text" - extracts text without formatting
+- "Select All (Ctrl+A)" - quick copy to clipboard
+- Workaround for cross-element text selection limitation (see TEXT_SELECTION_INVESTIGATION.md)
+
 ## Common Gotchas
 
 1. **Never instantiate ViewModels directly** - Always use DI via `Services.GetRequiredService<T>()` or they won't have their dependencies injected.
@@ -144,3 +167,7 @@ Theme state is maintained at both the `MainViewModel` level and per-`DocumentVie
    - Closing a document with unsaved changes (`MainViewModel.CloseDocument()`)
    - Exiting the application with any unsaved documents (`MainViewModel.Exit()`)
    - Opening a file from path with unsaved changes (`MainViewModel.OpenFileFromPathAsync()`)
+
+6. **Advanced inline rendering** - `RenderInlines()` method uses pattern matching with priority ordering. Special emphasis types (superscript, subscript, highlight) MUST be matched before general `EmphasisInline` case due to C# pattern evaluation order.
+
+7. **Text extraction methods** - Never call `.ToString()` on unknown Markdig inline types as it returns class names. Always use explicit switch cases or return empty string for unknown types.
