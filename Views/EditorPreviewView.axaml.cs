@@ -11,6 +11,9 @@ using Markdig;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using Markdig.Extensions.TaskLists;
+using Markdig.Extensions.Footnotes;
+using Markdig.Extensions.Abbreviations;
+using Markdig.Extensions.Mathematics;
 using System;
 using System.Linq;
 using System.Text;
@@ -481,7 +484,61 @@ public partial class EditorPreviewView : UserControl
                     };
                     panel.Children.Add(linkButton);
                     break;
+                // Special emphasis cases MUST come before general EmphasisInline case
+                case EmphasisInline emphasis when emphasis.DelimiterChar == '=' && emphasis.DelimiterCount == 2:
+                    // Mark/highlight text (==text==)
+                    panel.Children.Add(new SelectableTextBlock
+                    {
+                        Text = ExtractText(emphasis),
+                        FontSize = 14,
+                        Foreground = Brushes.Black,
+                        Background = new SolidColorBrush(Color.Parse("#FFF3CD"))
+                    });
+                    break;
+                case EmphasisInline emphasis when emphasis.DelimiterChar == '+' && emphasis.DelimiterCount == 2:
+                    // Inserted text - underline (++text++)
+                    panel.Children.Add(new SelectableTextBlock
+                    {
+                        Text = ExtractText(emphasis),
+                        FontSize = 14,
+                        Foreground = new SolidColorBrush(textColor),
+                        TextDecorations = TextDecorations.Underline
+                    });
+                    break;
+                case EmphasisInline emphasis when emphasis.DelimiterChar == '~' && emphasis.DelimiterCount == 2:
+                    // Strikethrough (~~text~~)
+                    panel.Children.Add(new SelectableTextBlock
+                    {
+                        Text = ExtractText(emphasis),
+                        FontSize = 14,
+                        Foreground = new SolidColorBrush(textColor),
+                        TextDecorations = TextDecorations.Strikethrough
+                    });
+                    break;
+                case EmphasisInline emphasis when emphasis.DelimiterChar == '~' && emphasis.DelimiterCount == 1:
+                    // Subscript (~text~)
+                    panel.Children.Add(new SelectableTextBlock
+                    {
+                        Text = ExtractText(emphasis),
+                        FontSize = 11,
+                        Foreground = new SolidColorBrush(textColor),
+                        VerticalAlignment = VerticalAlignment.Bottom,
+                        Margin = new Thickness(0, 0, 0, -4)
+                    });
+                    break;
+                case EmphasisInline emphasis when emphasis.DelimiterChar == '^' && emphasis.DelimiterCount == 1:
+                    // Superscript (^text^)
+                    panel.Children.Add(new SelectableTextBlock
+                    {
+                        Text = ExtractText(emphasis),
+                        FontSize = 11,
+                        Foreground = new SolidColorBrush(textColor),
+                        VerticalAlignment = VerticalAlignment.Top,
+                        Margin = new Thickness(0, -4, 0, 0)
+                    });
+                    break;
                 case EmphasisInline emphasis:
+                    // General bold/italic case
                     var empText = ExtractText(emphasis);
                     var empBlock = new SelectableTextBlock
                     {
@@ -489,18 +546,12 @@ public partial class EditorPreviewView : UserControl
                         FontSize = 14,
                         Foreground = new SolidColorBrush(textColor)
                     };
-
                     // Handle bold (**text** or __text__)
                     if (emphasis.DelimiterCount == 2 && (emphasis.DelimiterChar == '*' || emphasis.DelimiterChar == '_'))
                         empBlock.FontWeight = FontWeight.Bold;
                     // Handle italic (*text* or _text_)
                     else if (emphasis.DelimiterCount == 1 && (emphasis.DelimiterChar == '*' || emphasis.DelimiterChar == '_'))
                         empBlock.FontStyle = FontStyle.Italic;
-                    // Handle strikethrough (~~text~~)
-                    else if (emphasis.DelimiterChar == '~')
-                    {
-                        empBlock.TextDecorations = TextDecorations.Strikethrough;
-                    }
 
                     panel.Children.Add(empBlock);
                     break;
@@ -522,13 +573,54 @@ public partial class EditorPreviewView : UserControl
                         Foreground = new SolidColorBrush(textColor)
                     });
                     break;
-                default:
+                case FootnoteLink footnoteLink:
+                    // Render footnote reference
+                    var fnLink = new HyperlinkButton
+                    {
+                        Content = $"[{footnoteLink.Index + 1}]",
+                        FontSize = 11,
+                        Foreground = new SolidColorBrush(Color.Parse("#0066CC")),
+                        Padding = new Thickness(0),
+                        VerticalAlignment = VerticalAlignment.Top
+                    };
+                    panel.Children.Add(fnLink);
+                    break;
+                case AbbreviationInline abbreviation:
+                    // Render abbreviation with underline
                     panel.Children.Add(new SelectableTextBlock
                     {
-                        Text = item.ToString(),
+                        Text = abbreviation.Abbreviation?.Label ?? abbreviation.ToString(),
                         FontSize = 14,
-                        Foreground = new SolidColorBrush(textColor)
+                        Foreground = new SolidColorBrush(textColor),
+                        TextDecorations = TextDecorations.Underline
                     });
+                    break;
+                case MathInline mathInline:
+                    // Render inline math with $ delimiters for visual indication
+                    panel.Children.Add(new SelectableTextBlock
+                    {
+                        Text = $"${mathInline.Content}$",
+                        FontSize = 14,
+                        Foreground = new SolidColorBrush(Color.Parse("#8B008B")),
+                        FontFamily = new FontFamily("Consolas,Courier New,monospace")
+                    });
+                    break;
+                case ContainerInline container:
+                    // Recursively render container inlines
+                    RenderInlines(panel, container, textColor);
+                    break;
+                default:
+                    // Fallback - try to extract text
+                    var text = item.ToString();
+                    if (!string.IsNullOrWhiteSpace(text) && text != item.GetType().Name)
+                    {
+                        panel.Children.Add(new SelectableTextBlock
+                        {
+                            Text = text,
+                            FontSize = 14,
+                            Foreground = new SolidColorBrush(textColor)
+                        });
+                    }
                     break;
             }
         }
