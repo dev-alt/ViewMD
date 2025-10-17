@@ -58,6 +58,21 @@ public partial class EditorPreviewView : UserControl
         _placeholderFull = this.FindControl<TextBlock>("PlaceholderFull");
         _previewScrollerRight = this.FindControl<ScrollViewer>("PreviewScrollerRight");
         _previewScrollerFull = this.FindControl<ScrollViewer>("PreviewScrollerFull");
+
+        // Wire up context menu items
+        var copyMarkdownRight = this.FindControl<MenuItem>("CopyMarkdownRight");
+        var copyPlainTextRight = this.FindControl<MenuItem>("CopyPlainTextRight");
+        var selectAllRight = this.FindControl<MenuItem>("SelectAllRight");
+        var copyMarkdownFull = this.FindControl<MenuItem>("CopyMarkdownFull");
+        var copyPlainTextFull = this.FindControl<MenuItem>("CopyPlainTextFull");
+        var selectAllFull = this.FindControl<MenuItem>("SelectAllFull");
+
+        if (copyMarkdownRight != null) copyMarkdownRight.Click += OnCopyMarkdown;
+        if (copyPlainTextRight != null) copyPlainTextRight.Click += OnCopyPlainText;
+        if (selectAllRight != null) selectAllRight.Click += OnSelectAll;
+        if (copyMarkdownFull != null) copyMarkdownFull.Click += OnCopyMarkdown;
+        if (copyPlainTextFull != null) copyPlainTextFull.Click += OnCopyPlainText;
+        if (selectAllFull != null) selectAllFull.Click += OnSelectAll;
     }
 
     private void SetupEditor()
@@ -1070,5 +1085,182 @@ public partial class EditorPreviewView : UserControl
         if (emphasis.DelimiterCount == 1)
             return $"*{text}*";
         return text;
+    }
+
+    // Context menu handlers
+    private async void OnCopyMarkdown(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is DocumentViewModel vm && _editor != null)
+        {
+            var markdownText = _editor.Text ?? string.Empty;
+            if (!string.IsNullOrEmpty(markdownText))
+            {
+                var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+                if (clipboard != null)
+                {
+                    await clipboard.SetTextAsync(markdownText);
+                }
+            }
+        }
+    }
+
+    private async void OnCopyPlainText(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is DocumentViewModel vm && _editor != null)
+        {
+            var markdownText = _editor.Text ?? string.Empty;
+            if (!string.IsNullOrEmpty(markdownText))
+            {
+                // Parse markdown and extract plain text
+                var pipeline = new MarkdownPipelineBuilder()
+                    .UseAdvancedExtensions()
+                    .UseEmojiAndSmiley()
+                    .UseDiagrams()
+                    .Build();
+
+                var document = Markdown.Parse(markdownText, pipeline);
+                var plainText = ExtractPlainTextFromDocument(document);
+
+                var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+                if (clipboard != null)
+                {
+                    await clipboard.SetTextAsync(plainText);
+                }
+            }
+        }
+    }
+
+    private async void OnSelectAll(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        // Same as Copy All Markdown - select all copies the markdown to clipboard
+        if (DataContext is DocumentViewModel vm && _editor != null)
+        {
+            var markdownText = _editor.Text ?? string.Empty;
+            if (!string.IsNullOrEmpty(markdownText))
+            {
+                var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+                if (clipboard != null)
+                {
+                    await clipboard.SetTextAsync(markdownText);
+                }
+            }
+        }
+    }
+
+    private string ExtractPlainTextFromDocument(MarkdownDocument document)
+    {
+        var result = new StringBuilder();
+        foreach (var block in document)
+        {
+            ExtractPlainTextFromBlock(block, result);
+        }
+        return result.ToString();
+    }
+
+    private void ExtractPlainTextFromBlock(Block block, StringBuilder result)
+    {
+        switch (block)
+        {
+            case HeadingBlock heading:
+                result.AppendLine(ExtractPlainTextFromInline(heading.Inline));
+                result.AppendLine();
+                break;
+
+            case ParagraphBlock paragraph:
+                result.AppendLine(ExtractPlainTextFromInline(paragraph.Inline));
+                break;
+
+            case CodeBlock codeBlock:
+                foreach (var line in codeBlock.Lines)
+                {
+                    result.AppendLine(line.ToString());
+                }
+                result.AppendLine();
+                break;
+
+            case ListBlock list:
+                foreach (var item in list.OfType<ListItemBlock>())
+                {
+                    foreach (var itemBlock in item)
+                    {
+                        if (itemBlock is ParagraphBlock para)
+                        {
+                            result.AppendLine($"• {ExtractPlainTextFromInline(para.Inline)}");
+                        }
+                    }
+                }
+                result.AppendLine();
+                break;
+
+            case QuoteBlock quote:
+                foreach (var quoteBlock in quote)
+                {
+                    if (quoteBlock is ParagraphBlock para)
+                    {
+                        result.AppendLine($"> {ExtractPlainTextFromInline(para.Inline)}");
+                    }
+                }
+                result.AppendLine();
+                break;
+
+            case ThematicBreakBlock:
+                result.AppendLine("---");
+                result.AppendLine();
+                break;
+
+            case Markdig.Extensions.Tables.Table table:
+                foreach (var row in table.OfType<Markdig.Extensions.Tables.TableRow>())
+                {
+                    var cells = new System.Collections.Generic.List<string>();
+                    foreach (var cell in row.OfType<Markdig.Extensions.Tables.TableCell>())
+                    {
+                        cells.Add(ExtractTableCellText(cell));
+                    }
+                    result.AppendLine(string.Join(" | ", cells));
+                }
+                result.AppendLine();
+                break;
+        }
+    }
+
+    private string ExtractPlainTextFromInline(ContainerInline? inline)
+    {
+        if (inline == null) return string.Empty;
+
+        var result = new StringBuilder();
+        foreach (var item in inline)
+        {
+            switch (item)
+            {
+                case LiteralInline literal:
+                    result.Append(literal.Content.ToString());
+                    break;
+
+                case CodeInline code:
+                    result.Append(code.Content);
+                    break;
+
+                case MathInline math:
+                    result.Append(math.Content);
+                    break;
+
+                case LinkInline link:
+                    result.Append(ExtractPlainTextFromInline(link));
+                    break;
+
+                case EmphasisInline emphasis:
+                    result.Append(ExtractPlainTextFromInline(emphasis));
+                    break;
+
+                case LineBreakInline:
+                    result.Append(" ");
+                    break;
+
+                case ContainerInline container:
+                    result.Append(ExtractPlainTextFromInline(container));
+                    break;
+            }
+        }
+        return result.ToString();
     }
 }

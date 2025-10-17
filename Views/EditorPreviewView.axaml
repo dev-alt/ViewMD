@@ -30,6 +30,14 @@
                          VerticalScrollBarVisibility="Auto"
                          HorizontalScrollBarVisibility="Disabled"
                          Padding="16">
+                <ScrollViewer.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Copy All Markdown" Name="CopyMarkdownRight"/>
+                        <MenuItem Header="Copy as Plain Text" Name="CopyPlainTextRight"/>
+                        <Separator/>
+                        <MenuItem Header="Select All (Ctrl+A)" Name="SelectAllRight"/>
+                    </ContextMenu>
+                </ScrollViewer.ContextMenu>
                 <StackPanel Name="PreviewContentRight" Spacing="8" MaxWidth="1200">
                     <TextBlock Text="Start typing markdown in the editor to see the preview..."
                               FontStyle="Italic"
@@ -44,6 +52,14 @@
             <ScrollViewer Name="PreviewScrollerFull"
                          VerticalScrollBarVisibility="Auto"
                          HorizontalScrollBarVisibility="Disabled">
+                <ScrollViewer.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Copy All Markdown" Name="CopyMarkdownFull"/>
+                        <MenuItem Header="Copy as Plain Text" Name="CopyPlainTextFull"/>
+                        <Separator/>
+                        <MenuItem Header="Select All (Ctrl+A)" Name="SelectAllFull"/>
+                    </ContextMenu>
+                </ScrollViewer.ContextMenu>
                 <Panel HorizontalAlignment="Center">
                     <StackPanel Name="PreviewContentFull"
                                Spacing="8"
