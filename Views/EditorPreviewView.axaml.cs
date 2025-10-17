@@ -28,8 +28,11 @@ public partial class EditorPreviewView : UserControl
     private GridSplitter? _splitter;
     private TextBlock? _placeholderRight;
     private TextBlock? _placeholderFull;
+    private ScrollViewer? _previewScrollerRight;
+    private ScrollViewer? _previewScrollerFull;
     private DispatcherTimer? _renderTimer;
     private string _lastRenderedText = string.Empty;
+    private bool _isPreviewScrolling = false;
 
     public EditorPreviewView()
     {
@@ -50,6 +53,8 @@ public partial class EditorPreviewView : UserControl
         _splitter = this.FindControl<GridSplitter>("Splitter");
         _placeholderRight = this.FindControl<TextBlock>("PlaceholderRight");
         _placeholderFull = this.FindControl<TextBlock>("PlaceholderFull");
+        _previewScrollerRight = this.FindControl<ScrollViewer>("PreviewScrollerRight");
+        _previewScrollerFull = this.FindControl<ScrollViewer>("PreviewScrollerFull");
     }
 
     private void SetupEditor()
@@ -60,6 +65,22 @@ public partial class EditorPreviewView : UserControl
         _editor.TextChanged += (_, text) =>
         {
             OnEditorTextChanged();
+        };
+
+        // Subscribe to scroll changes for synchronized scrolling
+        _editor.ScrollChanged += (_, scrollPercentage) =>
+        {
+            if (!_isPreviewScrolling && DataContext is DocumentViewModel vm)
+            {
+                var targetScroller = vm.IsReadMode ? _previewScrollerFull : _previewScrollerRight;
+                if (targetScroller != null && targetScroller.Extent.Height > 0)
+                {
+                    _isPreviewScrolling = true;
+                    var targetOffset = scrollPercentage * targetScroller.Extent.Height;
+                    targetScroller.Offset = new Vector(targetScroller.Offset.X, targetOffset);
+                    Dispatcher.UIThread.Post(() => _isPreviewScrolling = false, DispatcherPriority.Background);
+                }
+            }
         };
 
         // Focus the editor
@@ -468,10 +489,19 @@ public partial class EditorPreviewView : UserControl
                         FontSize = 14,
                         Foreground = new SolidColorBrush(textColor)
                     };
-                    if (emphasis.DelimiterCount == 2 && emphasis.DelimiterChar == '*')
+
+                    // Handle bold (**text** or __text__)
+                    if (emphasis.DelimiterCount == 2 && (emphasis.DelimiterChar == '*' || emphasis.DelimiterChar == '_'))
                         empBlock.FontWeight = FontWeight.Bold;
-                    else if (emphasis.DelimiterCount == 1)
+                    // Handle italic (*text* or _text_)
+                    else if (emphasis.DelimiterCount == 1 && (emphasis.DelimiterChar == '*' || emphasis.DelimiterChar == '_'))
                         empBlock.FontStyle = FontStyle.Italic;
+                    // Handle strikethrough (~~text~~)
+                    else if (emphasis.DelimiterChar == '~')
+                    {
+                        empBlock.TextDecorations = TextDecorations.Strikethrough;
+                    }
+
                     panel.Children.Add(empBlock);
                     break;
                 case CodeInline code:
@@ -763,7 +793,16 @@ public partial class EditorPreviewView : UserControl
                     }
                     else if (inline is EmphasisInline emphasis)
                     {
-                        result.Append(ExtractText(emphasis));
+                        var emphasisText = ExtractText(emphasis);
+                        // Add markdown formatting markers for visual representation
+                        if (emphasis.DelimiterCount == 2 && (emphasis.DelimiterChar == '*' || emphasis.DelimiterChar == '_'))
+                            result.Append($"**{emphasisText}**");
+                        else if (emphasis.DelimiterCount == 1 && (emphasis.DelimiterChar == '*' || emphasis.DelimiterChar == '_'))
+                            result.Append($"*{emphasisText}*");
+                        else if (emphasis.DelimiterChar == '~')
+                            result.Append($"~~{emphasisText}~~");
+                        else
+                            result.Append(emphasisText);
                     }
                     else if (inline is CodeInline code)
                     {
