@@ -174,6 +174,67 @@ public partial class TitleBarView : UserControl
             };
         }
 
+        // Theme commands
+        var glassLightThemeItem = this.FindControl<MenuItem>("GlassLightThemeItem");
+        if (glassLightThemeItem != null)
+        {
+            glassLightThemeItem.PointerPressed += (s, e) =>
+            {
+                if (glassLightThemeItem.Command != null && glassLightThemeItem.Command.CanExecute(null))
+                {
+                    glassLightThemeItem.Command.Execute(null);
+                }
+            };
+        }
+
+        var glassDarkThemeItem = this.FindControl<MenuItem>("GlassDarkThemeItem");
+        if (glassDarkThemeItem != null)
+        {
+            glassDarkThemeItem.PointerPressed += (s, e) =>
+            {
+                if (glassDarkThemeItem.Command != null && glassDarkThemeItem.Command.CanExecute(null))
+                {
+                    glassDarkThemeItem.Command.Execute(null);
+                }
+            };
+        }
+
+        var acrylicLightThemeItem = this.FindControl<MenuItem>("AcrylicLightThemeItem");
+        if (acrylicLightThemeItem != null)
+        {
+            acrylicLightThemeItem.PointerPressed += (s, e) =>
+            {
+                if (acrylicLightThemeItem.Command != null && acrylicLightThemeItem.Command.CanExecute(null))
+                {
+                    acrylicLightThemeItem.Command.Execute(null);
+                }
+            };
+        }
+
+        var acrylicDarkThemeItem = this.FindControl<MenuItem>("AcrylicDarkThemeItem");
+        if (acrylicDarkThemeItem != null)
+        {
+            acrylicDarkThemeItem.PointerPressed += (s, e) =>
+            {
+                if (acrylicDarkThemeItem.Command != null && acrylicDarkThemeItem.Command.CanExecute(null))
+                {
+                    acrylicDarkThemeItem.Command.Execute(null);
+                }
+            };
+        }
+
+        var pureDarkThemeItem = this.FindControl<MenuItem>("PureDarkThemeItem");
+        if (pureDarkThemeItem != null)
+        {
+            pureDarkThemeItem.PointerPressed += (s, e) =>
+            {
+                if (pureDarkThemeItem.Command != null && pureDarkThemeItem.Command.CanExecute(null))
+                {
+                    pureDarkThemeItem.Command.Execute(null);
+                }
+            };
+        }
+
         // Tab commands
         var closeTabMenuItem = this.FindControl<MenuItem>("CloseTabMenuItem");
         if (closeTabMenuItem != null)
