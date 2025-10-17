@@ -14,7 +14,10 @@
         DragDrop.AllowDrop="True"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaChromeHints="NoChrome"
-        ExtendClientAreaTitleBarHeightHint="32">
+        ExtendClientAreaTitleBarHeightHint="32"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="Transparent"
+        x:Name="MainWindowRoot">
 
     <Design.DataContext>
         <vm:MainViewModel/>
@@ -32,9 +35,21 @@
         <KeyBinding Gesture="Ctrl+Shift+T" Command="{Binding ToggleThemeCommand}"/>
     </Window.KeyBindings>
 
-    <DockPanel>
-        <!-- Title Bar with Hamburger Menu & Window Controls -->
-        <views:TitleBarView DockPanel.Dock="Top" />
+    <Panel>
+        <!-- Acrylic Background Layer -->
+        <ExperimentalAcrylicBorder IsHitTestVisible="False" x:Name="AcrylicBackground">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial
+                    BackgroundSource="Digger"
+                    TintColor="#F8F9FA"
+                    TintOpacity="0.9"
+                    MaterialOpacity="0.7" />
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
+
+        <DockPanel>
+            <!-- Title Bar with Hamburger Menu & Window Controls -->
+            <views:TitleBarView DockPanel.Dock="Top" />
 
         <!-- Tabs Below Menu -->
         <Border DockPanel.Dock="Top" Background="#F8F9FA" BorderBrush="#E0E0E0" BorderThickness="0,1,0,1" Padding="4,2">
@@ -207,5 +222,6 @@
                 </Border>
             </Border>
         </Border>
-    </DockPanel>
+        </DockPanel>
+    </Panel>
 </Window>
