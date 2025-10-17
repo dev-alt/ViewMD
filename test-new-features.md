@@ -13,8 +13,10 @@ This document tests all the newly enabled Markdown extensions in ViewMD.
 
 ### Superscript
 - Mathematical notation: E = mc^2^
-- Footnote references: See note^[1]^
+- Footnote references: See note[^1]
 - Ordinal numbers: 1^st^, 2^nd^, 3^rd^
+
+[^1]: This is a footnote explaining something important.
 
 ### Subscript
 - Chemical formulas: H~2~O, CO~2~, C~6~H~12~O~6~

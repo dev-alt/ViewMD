@@ -1009,12 +1009,16 @@ public partial class EditorPreviewView : UserControl
         {
             result.Append(item switch
             {
+                TaskList => string.Empty, // Skip task list markers
                 LiteralInline literal => literal.Content.ToString(),
                 CodeInline code => $"`{code.Content}`",
                 EmphasisInline emphasis => ExtractEmphasisText(emphasis),
+                MathInline math => $"${math.Content}$",  // Include math inline
+                FootnoteLink footnote => $"[{footnote.Index + 1}]",  // Include footnote refs
                 LineBreakInline => "\n",
-                LinkInline link => ExtractText(link as ContainerInline) + $" ({link.Url})",
-                _ => item.ToString()
+                LinkInline link => ExtractText(link as ContainerInline),
+                ContainerInline container => ExtractText(container), // Recursively handle containers
+                _ => string.Empty  // Skip unknown types instead of calling ToString()
             });
         }
         return result.ToString();
