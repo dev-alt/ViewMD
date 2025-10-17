@@ -259,6 +259,7 @@ public partial class EditorPreviewView : UserControl
         var pipeline = new MarkdownPipelineBuilder()
             .UseAdvancedExtensions()
             .UseEmojiAndSmiley()
+            .UseDiagrams()
             .Build();
 
         var document = Markdown.Parse(markdownText, pipeline);
@@ -644,7 +645,87 @@ public partial class EditorPreviewView : UserControl
             language = fencedBlock.Info;
         }
 
-        // Use syntax highlighter if language is specified
+        // Handle special code block types
+        if (language?.ToLower() == "mermaid")
+        {
+            // Render Mermaid diagram placeholder with the code
+            return new Border
+            {
+                Background = new SolidColorBrush(Color.Parse("#E8F4F8")),
+                BorderBrush = new SolidColorBrush(Color.Parse("#4A90E2")),
+                BorderThickness = new Thickness(2),
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(12),
+                Margin = new Thickness(0, 0, 0, 10),
+                Child = new StackPanel
+                {
+                    Children =
+                    {
+                        new TextBlock
+                        {
+                            Text = "📊 Mermaid Diagram",
+                            FontSize = 16,
+                            FontWeight = FontWeight.Bold,
+                            Foreground = new SolidColorBrush(Color.Parse("#4A90E2")),
+                            Margin = new Thickness(0, 0, 0, 8)
+                        },
+                        new TextBlock
+                        {
+                            Text = "Mermaid diagrams require HTML rendering. The diagram code is:",
+                            FontSize = 12,
+                            Foreground = new SolidColorBrush(Color.Parse("#666666")),
+                            Margin = new Thickness(0, 0, 0, 8),
+                            TextWrapping = TextWrapping.Wrap
+                        },
+                        new SelectableTextBlock
+                        {
+                            Text = code.ToString().TrimEnd(),
+                            FontFamily = new FontFamily("Consolas,Courier New,monospace"),
+                            FontSize = 11,
+                            Foreground = new SolidColorBrush(Color.Parse("#333333")),
+                            TextWrapping = TextWrapping.Wrap
+                        }
+                    }
+                }
+            };
+        }
+        else if (language?.ToLower() == "math" || language?.ToLower() == "latex")
+        {
+            // Render math block with special styling
+            return new Border
+            {
+                Background = new SolidColorBrush(Color.Parse("#F5EEF8")),
+                BorderBrush = new SolidColorBrush(Color.Parse("#8B008B")),
+                BorderThickness = new Thickness(2),
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(12),
+                Margin = new Thickness(0, 0, 0, 10),
+                Child = new StackPanel
+                {
+                    Children =
+                    {
+                        new TextBlock
+                        {
+                            Text = "📐 Mathematical Expression",
+                            FontSize = 16,
+                            FontWeight = FontWeight.Bold,
+                            Foreground = new SolidColorBrush(Color.Parse("#8B008B")),
+                            Margin = new Thickness(0, 0, 0, 8)
+                        },
+                        new SelectableTextBlock
+                        {
+                            Text = code.ToString().TrimEnd(),
+                            FontFamily = new FontFamily("Consolas,Courier New,monospace"),
+                            FontSize = 14,
+                            Foreground = new SolidColorBrush(Color.Parse("#8B008B")),
+                            TextWrapping = TextWrapping.Wrap
+                        }
+                    }
+                }
+            };
+        }
+
+        // Use syntax highlighter for regular code blocks
         var content = SyntaxHighlighter.CreateHighlightedBlock(code.ToString().TrimEnd(), language, isDarkTheme);
 
         return new Border
@@ -777,15 +858,20 @@ public partial class EditorPreviewView : UserControl
         {
             if (block is ParagraphBlock para)
             {
-                var text = ExtractText(para.Inline);
-                panel.Children.Add(new SelectableTextBlock
-                {
-                    Text = text,
-                    FontSize = 14,
-                    FontStyle = FontStyle.Italic,
-                    Foreground = new SolidColorBrush(textColor),
-                    TextWrapping = TextWrapping.Wrap
-                });
+                // Use WrapPanel to properly render inline formatting
+                var wrapPanel = new WrapPanel { Margin = new Thickness(0, 0, 0, 4) };
+                RenderInlines(wrapPanel, para.Inline, textColor);
+                panel.Children.Add(wrapPanel);
+            }
+            else if (block is CodeBlock codeBlock)
+            {
+                // Render code blocks inside quotes
+                panel.Children.Add(RenderCodeBlock(codeBlock, isDarkTheme));
+            }
+            else if (block is ListBlock listBlock)
+            {
+                // Render lists inside quotes
+                panel.Children.Add(RenderList(listBlock, textColor, isDarkTheme));
             }
         }
 
