@@ -2,11 +2,14 @@ using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using Avalonia.Interactivity;
 using MarkdownViewer.ViewModels;
+using MarkdownViewer.Models;
 using System;
 using System.Threading.Tasks;
 using System.Linq;
 using Avalonia.Input;
 using System.IO;
+using Avalonia.Media;
+using System.ComponentModel;
 
 namespace MarkdownViewer.Views;
 
@@ -45,6 +48,31 @@ public partial class MainWindow : Window
         {
             viewModel.ShowOpenFileDialogAsync = ShowOpenFileDialogAsync;
             viewModel.ShowSaveFileDialogAsync = ShowSaveFileDialogAsync;
+
+            // Listen for theme changes
+            viewModel.PropertyChanged += OnViewModelPropertyChanged;
+
+            // Apply initial theme
+            ApplyTheme(viewModel.CurrentTheme);
+        }
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainViewModel.CurrentTheme) && DataContext is MainViewModel vm)
+        {
+            ApplyTheme(vm.CurrentTheme);
+        }
+    }
+
+    private void ApplyTheme(AppTheme theme)
+    {
+        var acrylicBackground = this.FindControl<ExperimentalAcrylicBorder>("AcrylicBackground");
+        if (acrylicBackground?.Material is ExperimentalAcrylicMaterial material)
+        {
+            material.TintColor = Color.Parse(theme.GetTintColor());
+            material.TintOpacity = theme.GetTintOpacity();
+            material.MaterialOpacity = theme.GetMaterialOpacity();
         }
     }
 

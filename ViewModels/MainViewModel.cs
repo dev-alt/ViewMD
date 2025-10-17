@@ -24,6 +24,7 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private DocumentViewModel? _activeDocument;
     [ObservableProperty] private string _windowTitle = "ViewMD";
     [ObservableProperty] private ObservableCollection<string> _recentFiles = [];
+    [ObservableProperty] private AppTheme _currentTheme = AppTheme.GlassLight;
 
     private readonly IFileService _fileService;
     private readonly IExportService _exportService;
@@ -345,6 +346,44 @@ public partial class MainViewModel : ViewModelBase
         if (ActiveDocument == null) return;
         ActiveDocument.IsDarkTheme = !ActiveDocument.IsDarkTheme;
     }
+
+    // Theme Management
+    [RelayCommand]
+    private void SetTheme(AppTheme theme)
+    {
+        CurrentTheme = theme;
+
+        // Update Application RequestedThemeVariant
+        if (Application.Current is App app)
+        {
+            app.RequestedThemeVariant = theme.IsDarkTheme()
+                ? Avalonia.Styling.ThemeVariant.Dark
+                : Avalonia.Styling.ThemeVariant.Light;
+        }
+
+        // Update all documents to use the theme's dark/light preference
+        foreach (var doc in Documents)
+        {
+            doc.IsDarkTheme = theme.IsDarkTheme();
+        }
+
+        StatusText = $"Theme changed to {theme.GetDisplayName()}";
+    }
+
+    [RelayCommand]
+    private void SetGlassLightTheme() => SetTheme(AppTheme.GlassLight);
+
+    [RelayCommand]
+    private void SetGlassDarkTheme() => SetTheme(AppTheme.GlassDark);
+
+    [RelayCommand]
+    private void SetAcrylicLightTheme() => SetTheme(AppTheme.AcrylicLight);
+
+    [RelayCommand]
+    private void SetAcrylicDarkTheme() => SetTheme(AppTheme.AcrylicDark);
+
+    [RelayCommand]
+    private void SetPureDarkTheme() => SetTheme(AppTheme.PureDark);
 
     // Tab Management
     [RelayCommand]

@@ -91,6 +91,38 @@
                         </MenuItem.Icon>
                     </MenuItem>
                     <Separator/>
+                    <!-- Theme Selection -->
+                    <MenuItem Header="Themes" Name="ThemesMenuItem">
+                        <MenuItem.Icon>
+                            <TextBlock Text="🎨" FontSize="12"/>
+                        </MenuItem.Icon>
+                        <MenuItem Header="Glass Light (Default)" Command="{Binding SetGlassLightThemeCommand}" Name="GlassLightThemeItem">
+                            <MenuItem.Icon>
+                                <TextBlock Text="☀️" FontSize="11"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Glass Dark" Command="{Binding SetGlassDarkThemeCommand}" Name="GlassDarkThemeItem">
+                            <MenuItem.Icon>
+                                <TextBlock Text="🌙" FontSize="11"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Acrylic Light" Command="{Binding SetAcrylicLightThemeCommand}" Name="AcrylicLightThemeItem">
+                            <MenuItem.Icon>
+                                <TextBlock Text="💎" FontSize="11"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Acrylic Dark" Command="{Binding SetAcrylicDarkThemeCommand}" Name="AcrylicDarkThemeItem">
+                            <MenuItem.Icon>
+                                <TextBlock Text="🌌" FontSize="11"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Pure Dark (Solid)" Command="{Binding SetPureDarkThemeCommand}" Name="PureDarkThemeItem">
+                            <MenuItem.Icon>
+                                <TextBlock Text="⬛" FontSize="11"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </MenuItem>
+                    <Separator/>
                     <!-- Tab Commands -->
                     <MenuItem Header="Close Tab" Command="{Binding CloseActiveTabCommand}" InputGesture="Ctrl+W" Name="CloseTabMenuItem">
                         <MenuItem.Icon>
