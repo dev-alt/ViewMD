@@ -965,34 +965,70 @@ public partial class EditorPreviewView : UserControl
             {
                 foreach (var inline in para.Inline)
                 {
-                    if (inline is LiteralInline literal)
+                    switch (inline)
                     {
-                        result.Append(literal.Content.ToString());
-                    }
-                    else if (inline is EmphasisInline emphasis)
-                    {
-                        var emphasisText = ExtractText(emphasis);
-                        // Add markdown formatting markers for visual representation
-                        if (emphasis.DelimiterCount == 2 && (emphasis.DelimiterChar == '*' || emphasis.DelimiterChar == '_'))
-                            result.Append($"**{emphasisText}**");
-                        else if (emphasis.DelimiterCount == 1 && (emphasis.DelimiterChar == '*' || emphasis.DelimiterChar == '_'))
-                            result.Append($"*{emphasisText}*");
-                        else if (emphasis.DelimiterChar == '~')
-                            result.Append($"~~{emphasisText}~~");
-                        else
-                            result.Append(emphasisText);
-                    }
-                    else if (inline is CodeInline code)
-                    {
-                        result.Append($"`{code.Content}`");
-                    }
-                    else if (inline is LinkInline link)
-                    {
-                        result.Append(ExtractText(link));
-                    }
-                    else
-                    {
-                        result.Append(inline.ToString());
+                        case LiteralInline literal:
+                            result.Append(literal.Content.ToString());
+                            break;
+
+                        case EmphasisInline emphasis when emphasis.DelimiterChar == '^' && emphasis.DelimiterCount == 1:
+                            // Superscript ^text^
+                            result.Append($"^{ExtractText(emphasis)}^");
+                            break;
+
+                        case EmphasisInline emphasis when emphasis.DelimiterChar == '~' && emphasis.DelimiterCount == 1:
+                            // Subscript ~text~
+                            result.Append($"~{ExtractText(emphasis)}~");
+                            break;
+
+                        case EmphasisInline emphasis when emphasis.DelimiterCount == 2 && (emphasis.DelimiterChar == '*' || emphasis.DelimiterChar == '_'):
+                            // Bold **text** or __text__
+                            result.Append($"**{ExtractText(emphasis)}**");
+                            break;
+
+                        case EmphasisInline emphasis when emphasis.DelimiterCount == 1 && (emphasis.DelimiterChar == '*' || emphasis.DelimiterChar == '_'):
+                            // Italic *text* or _text_
+                            result.Append($"*{ExtractText(emphasis)}*");
+                            break;
+
+                        case EmphasisInline emphasis when emphasis.DelimiterChar == '~' && emphasis.DelimiterCount == 2:
+                            // Strikethrough ~~text~~
+                            result.Append($"~~{ExtractText(emphasis)}~~");
+                            break;
+
+                        case EmphasisInline emphasis:
+                            // Other emphasis types
+                            result.Append(ExtractText(emphasis));
+                            break;
+
+                        case CodeInline code:
+                            result.Append($"`{code.Content}`");
+                            break;
+
+                        case MathInline math:
+                            // Render math inline with $ delimiters
+                            result.Append($"${math.Content}$");
+                            break;
+
+                        case LinkInline link:
+                            result.Append(ExtractText(link));
+                            break;
+
+                        case FootnoteLink footnote:
+                            result.Append($"[{footnote.Index + 1}]");
+                            break;
+
+                        case ContainerInline container:
+                            result.Append(ExtractText(container));
+                            break;
+
+                        case TaskList:
+                            // Skip task list markers
+                            break;
+
+                        default:
+                            // Skip unknown types instead of calling ToString()
+                            break;
                     }
                 }
             }
