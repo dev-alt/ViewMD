@@ -49,10 +49,10 @@
 
         <DockPanel>
             <!-- Title Bar with Hamburger Menu & Window Controls -->
-            <views:TitleBarView DockPanel.Dock="Top" />
+            <views:TitleBarView DockPanel.Dock="Top" Name="TitleBarView" />
 
         <!-- Tabs Below Menu -->
-        <Border DockPanel.Dock="Top" Background="#F8F9FA" BorderBrush="#E0E0E0" BorderThickness="0,1,0,1" Padding="4,2">
+        <Border DockPanel.Dock="Top" Background="#F8F9FA" BorderBrush="#E0E0E0" BorderThickness="0,1,0,1" Padding="4,2" Name="TabBorder">
             <TabControl x:Name="MainTabs" ItemsSource="{Binding Documents}" SelectedItem="{Binding ActiveDocument}" Name="TabControl" Background="Transparent" Padding="0">
                 <TabControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:DocumentViewModel">

@@ -412,4 +412,26 @@ public partial class TitleBarView : UserControl
             window.BeginMoveDrag(e);
         }
     }
+
+    public void ApplyTheme(MarkdownViewer.Models.AppTheme theme)
+    {
+        var titleBar = this.FindControl<Border>("TitleBar");
+        if (titleBar != null)
+        {
+            titleBar.Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse(theme.GetTitleBarColor()));
+        }
+
+        // Update app title text color
+        var appTitle = titleBar?.FindControl<StackPanel>("AppTitle");
+        if (appTitle != null)
+        {
+            foreach (var child in appTitle.Children)
+            {
+                if (child is TextBlock tb)
+                {
+                    tb.Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse(theme.GetForegroundColor()));
+                }
+            }
+        }
+    }
 }

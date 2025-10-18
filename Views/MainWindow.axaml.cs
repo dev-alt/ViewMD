@@ -67,12 +67,44 @@ public partial class MainWindow : Window
 
     private void ApplyTheme(AppTheme theme)
     {
+        // Apply acrylic background
         var acrylicBackground = this.FindControl<ExperimentalAcrylicBorder>("AcrylicBackground");
         if (acrylicBackground?.Material is ExperimentalAcrylicMaterial material)
         {
             material.TintColor = Color.Parse(theme.GetTintColor());
             material.TintOpacity = theme.GetTintOpacity();
             material.MaterialOpacity = theme.GetMaterialOpacity();
+        }
+
+        // Apply to TitleBarView
+        var titleBarView = this.FindControl<TitleBarView>("TitleBarView");
+        if (titleBarView != null)
+        {
+            titleBarView.ApplyTheme(theme);
+        }
+
+        // Apply tab background color
+        var tabBorder = this.FindControl<Border>("TabBorder");
+        if (tabBorder != null)
+        {
+            tabBorder.Background = new SolidColorBrush(Color.Parse(theme.GetTabBackgroundColor()));
+            tabBorder.BorderBrush = new SolidColorBrush(Color.Parse(theme.GetBorderColor()));
+        }
+
+        // Apply toolbar background color
+        var toolbarBorder = this.FindControl<Border>("ToolbarBorder");
+        if (toolbarBorder != null)
+        {
+            toolbarBorder.Background = new SolidColorBrush(Color.Parse(theme.GetToolbarBackgroundColor()));
+            toolbarBorder.BorderBrush = new SolidColorBrush(Color.Parse(theme.GetBorderColor()));
+        }
+
+        // Apply status bar background color
+        var statusBar = this.FindControl<Border>("StatusBar");
+        if (statusBar != null)
+        {
+            statusBar.Background = new SolidColorBrush(Color.Parse(theme.GetToolbarBackgroundColor()));
+            statusBar.BorderBrush = new SolidColorBrush(Color.Parse(theme.GetBorderColor()));
         }
     }
 
