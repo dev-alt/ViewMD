@@ -35,14 +35,17 @@ A lightweight, feature-rich Markdown reader and editor built with Avalonia UI an
 - Create new documents (Ctrl+N)
 - Open markdown files (Ctrl+O)
 - Save and Save As (Ctrl+S, Ctrl+Shift+S)
-- Export to HTML
+- Export to HTML and PDF
 - Recent files tracking
+- Multi-tab document management
 
 ### UI/UX
-- **Light and Dark themes** (Ctrl+Shift+T to toggle)
-- Clean, modern interface
+- **11 Beautiful Themes** including Glass Light/Dark, Acrylic Light/Dark, Pure Dark, Ocean Breeze, Forest Canopy, Sunset Glow, Midnight Purple, Rose Gold, and Arctic Mint
+- Clean, modern interface with acrylic blur effects
+- Read mode for distraction-free reading
 - Zoom controls for preview
 - Status bar with document stats
+- Right-click context menu with copy options
 - Beautiful typography and styling
 
 ## Keyboard Shortcuts
@@ -63,10 +66,12 @@ A lightweight, feature-rich Markdown reader and editor built with Avalonia UI an
 - `Ctrl+T` - Insert table
 
 ### View
-- `Ctrl+Shift+T` - Toggle theme
-- `Ctrl++` - Zoom in preview
-- `Ctrl+-` - Zoom out preview
-- `Ctrl+0` - Reset zoom
+- `F6` - Toggle read mode
+- `Ctrl+Shift+H` - Copy HTML to clipboard
+- `Ctrl+W` - Close active tab
+- `Ctrl+Shift+W` - Close all tabs
+- `Ctrl+Tab` - Next tab
+- `Ctrl+Shift+Tab` - Previous tab
 
 ## Architecture
 
@@ -162,22 +167,18 @@ dotnet publish -c Release -r osx-x64 --self-contained
 
 ## Known Limitations
 
-1. **WebView Preview**: Current implementation uses a basic renderer. For full HTML preview with math and diagrams, the Avalonia.WebView package needs to be integrated.
+1. **Image Handling**: Images must be accessible via file path or URL.
 
-2. **PDF Export**: Not yet implemented. HTML export is available.
-
-3. **Image Handling**: Images must be accessible via file path or URL.
+2. **Text Selection**: Cross-element text selection in preview is limited. Use the right-click context menu to copy markdown or plain text.
 
 ## Future Enhancements
 
-- [ ] Full WebView integration for rich preview
-- [ ] PDF export functionality
-- [ ] Vim mode for power users
-- [ ] Custom CSS themes
-- [ ] Plugin system
-- [ ] Real-time collaboration
-- [ ] Cloud sync integration
-- [ ] Mobile support (iOS/Android)
+- [ ] Custom CSS theme editor
+- [ ] Advanced find and replace
+- [ ] Outline/Table of contents navigation
+- [ ] Git integration for version control
+- [ ] Spell checker
+- [ ] Custom keyboard shortcuts configuration
 
 ## License
 

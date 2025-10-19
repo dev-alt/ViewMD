@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using MarkdownViewer.Models;
 
 namespace MarkdownViewer.Views;
 
@@ -369,6 +370,18 @@ public partial class TitleBarView : UserControl
             };
         }
 
+        var exportPdfMenuItem = this.FindControl<MenuItem>("ExportPdfMenuItem");
+        if (exportPdfMenuItem != null)
+        {
+            exportPdfMenuItem.PointerPressed += (s, e) =>
+            {
+                if (exportPdfMenuItem.Command != null && exportPdfMenuItem.Command.CanExecute(null))
+                {
+                    exportPdfMenuItem.Command.Execute(null);
+                }
+            };
+        }
+
         // Exit command
         var exitMenuItem = this.FindControl<MenuItem>("ExitMenuItem");
         if (exitMenuItem != null)
@@ -413,7 +426,7 @@ public partial class TitleBarView : UserControl
         }
     }
 
-    public void ApplyTheme(MarkdownViewer.Models.AppTheme theme)
+    public void ApplyTheme(AppTheme theme)
     {
         var titleBar = this.FindControl<Border>("TitleBar");
         if (titleBar != null)

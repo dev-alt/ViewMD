@@ -138,7 +138,7 @@ public partial class MainWindow : Window
     {
         var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = "Save Markdown File",
+            Title = extension == "html" ? "Export HTML" : extension == "pdf" ? "Export PDF" : "Save Markdown File",
             DefaultExtension = extension,
             FileTypeChoices = extension == "html"
                 ? new[]
@@ -146,6 +146,14 @@ public partial class MainWindow : Window
                     new FilePickerFileType("HTML Files")
                     {
                         Patterns = ["*.html", "*.htm"]
+                    }
+                }
+                : extension == "pdf"
+                ? new[]
+                {
+                    new FilePickerFileType("PDF Files")
+                    {
+                        Patterns = ["*.pdf"]
                     }
                 }
                 :

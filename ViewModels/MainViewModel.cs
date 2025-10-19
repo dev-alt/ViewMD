@@ -519,6 +519,23 @@ public partial class MainViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private async Task ExportPdf()
+    {
+        var savePdfDlg = ShowSaveFileDialogAsync;
+        if (savePdfDlg is null) return;
+        var result = await savePdfDlg("pdf");
+        if (string.IsNullOrEmpty(result)) return;
+
+        if (ActiveDocument is null) return;
+        var success = await _exportService.ExportToPdfAsync(
+            ActiveDocument.CurrentDocument with { Content = ActiveDocument.EditorViewModel.Text },
+            result,
+            ActiveDocument.IsDarkTheme);
+
+        StatusText = success ? $"Exported PDF to: {result}" : "Failed to export PDF";
+    }
+
+    [RelayCommand]
     private async Task Exit()
     {
         // Check if any documents have unsaved changes

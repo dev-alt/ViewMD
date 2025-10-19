@@ -173,6 +173,11 @@
                             <TextBlock Text="📤" FontSize="12"/>
                         </MenuItem.Icon>
                     </MenuItem>
+                    <MenuItem Header="Export PDF..." Command="{Binding ExportPdfCommand}" Name="ExportPdfMenuItem">
+                        <MenuItem.Icon>
+                            <TextBlock Text="📄" FontSize="12"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
                     <Separator/>
                     <MenuItem Header="Check for Updates" Command="{Binding CheckForUpdatesCommand}" Name="CheckForUpdatesMenuItem">
                         <MenuItem.Icon>
